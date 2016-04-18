@@ -1,0 +1,39 @@
+{
+  "name": "zero-service",
+  "version": "0.0.1",
+  "description": "A peer-2-peer serverless service discovery built on top of zeromq",
+  "main": "index.js",
+  "homepage": "http://github.com/mallocator/gulp-international",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/mallocator/zero-service.git"
+  },
+  "author": {
+    "name": "Ravi Gairola",
+    "email": "mallox@pyxzl.net",
+    "url": "https://github.com/mallocator"
+  },
+  "bugs": {
+    "url": "http://github.com/mallocator/zero-service/issues",
+    "email": "mallox@pyxzl.net"
+  },
+  "engine": {
+    "node": ">=5.0"
+  },
+  "scripts": {
+    "test": "istanbul cover _mocha",
+    "test-travis": "istanbul cover _mocha --report lcovonly -- -R spec"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "coveralls": "^2.11.9",
+    "gently": "^0.10.0",
+    "istanbul": "^0.4.3",
+    "mocha": "^2.4.5",
+    "mocha-lcov-reporter": "^1.2.0"
+  },
+  "dependencies": {
+    "zmq": "^2.14.0"
+  }
+}
