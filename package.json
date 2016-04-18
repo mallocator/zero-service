@@ -34,6 +34,9 @@
     "mocha-lcov-reporter": "^1.2.0"
   },
   "dependencies": {
+    "eventemitter2": "^1.0.0",
+    "lodash": "^4.11.1",
+    "shortid": "^2.2.6",
     "zmq": "^2.14.0"
   }
 }
