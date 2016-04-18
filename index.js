@@ -15,6 +15,9 @@ var On = require('./src/on');
  * The default options object, that will be combined with any passed in options.
  */
 var defaultOptions = {
+  custer: {
+    name: 'zero'
+  },
   port: 2206,
   discovery: {
     type: 'multicast'
@@ -135,7 +138,7 @@ class ZeroService extends events {
   removeService(id) {
     // TODO remove service from cluster
     // TODO show more info then just id (such as address or the node name)
-    
+
   }
 
   /**

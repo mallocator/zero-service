@@ -1,16 +1,32 @@
 language: node_js
 
-sudo: false
+sudo: true
 
 dist: trusty
 
-addons:
-  apt:
-    packages:
-      - libzmq3-dev
-
 node_js:
   - "5.0"
+
+env:
+- ZMQ="git://github.com/zeromq/zeromq4-1.git -b v4.1.2" SODIUM="git://github.com/jedisct1/libsodium.git -b 1.0.3"
+
+before_install:
+- sudo apt-get install uuid-dev
+- '[ -z "$SODIUM" ] || git clone --depth 1 $SODIUM libsodium'
+- '[ -z "$SODIUM" ] || cd libsodium'
+- '[ -z "$SODIUM" ] || ./autogen.sh'
+- '[ -z "$SODIUM" ] || ./configure'
+- '[ -z "$SODIUM" ] || make'
+- '[ -z "$SODIUM" ] || sudo make install'
+- '[ -z "$SODIUM" ] || cd ..'
+- git clone --depth 1 $ZMQ zmqlib
+- cd zmqlib
+- ./autogen.sh
+- ./configure
+- make
+- sudo make install
+- sudo /sbin/ldconfig
+- cd ..
 
 cache:
   apt: true
