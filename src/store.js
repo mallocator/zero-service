@@ -1,5 +1,8 @@
 'use strict';
 
+/**
+ * A storage class that keeps the current known state of the cluster in memory.
+ */
 class Store {
   constructor(options, emitter) {
     this.options = options;

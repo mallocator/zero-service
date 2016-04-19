@@ -145,6 +145,95 @@ class ZeroService extends events {
     this.send.removeService(id);
   }
 
+  // TODO check the zeromq docs for the exact api that we're trying to replicate here
+  /**
+   * Send a message to one node of the given service type and wait for an answer.
+   * @param type
+   * @param payload
+   * @param cb
+     */
+  req(type, payload, cb) {
+
+  }
+
+  // TODO check the zeromq docs for the exact api that we're trying to replicate here
+  /**
+   * Receive a message from from a node that expects an answer.
+   * @param type
+   * @param callback
+     */
+  res(type, callback) {
+
+  }
+
+  // TODO check the zeromq docs for the exact api that we're trying to replicate here
+  /**
+   * Send a message to one node of the given service type without expecting an answer.
+   * @param type
+   * @param payload
+     */
+  push(type, payload) {
+    // TODO if the type doesn't exist, register it.
+    // TODO send a request to one of the servers of this type
+  }
+
+  // TODO check the zeromq docs for the exact api that we're trying to replicate here
+  /**
+   * Receive a message without having to reply to it.
+   * @param type
+   * @param callback
+     */
+  pull(type, callback) {
+    // TODO if the type doesn't exist, register it.
+    // TODO register a replier who will answer when a request of this type has been received.
+  }
+
+  /**
+   * Publish a message to all nodes of the given service type without waiting for any acknowledgements.
+   * @param type
+   * @param payload
+     */
+  pub(type, payload) {
+    // TODO if the type doesn't exist, register it.
+    // TODO send the payload to all known nodes with this service
+  }
+
+  /**
+   * Listen to messages of a given type without having to acknowledge the reception (The publisher doesn't care).
+   * @param type
+   * @param callback  Called when a message has been received
+     */
+  sub(type, callback) {
+    // TODO if the type doesn't exist, register it.
+    // TODO receive payload from any node
+  }
+
+  /**
+   * Pair with one other node of the given type that has not been paired with any other so far.
+   * @param type
+   * @param callback  Called when a connection has been established
+     */
+  pair(type, callback) {
+  }
+
+  /**
+   * Send and receive messages to/from all services of the given type in round robin mode. Messages are queued until
+   * a service has received the message.
+   * @param type
+   * @param callback  Called whenever a message is acknowledged
+   */
+  dealer(type, callback) {
+  }
+
+  /**
+   * Send and receive messages to/from all services of the given type in round robin mode. Messages that have no
+   * recipient are discarded.
+   * @param type
+   * @param callback  Called whenever a message has been received
+   */
+  router(type, callback) {
+  }
+
   /**
    * @fires discovered
    * @private
