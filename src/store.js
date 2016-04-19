@@ -15,19 +15,39 @@ class Store {
     emitter.on('serviceRemoved', this.removeService);
   }
 
+  /**
+   * Stores a nodes information.
+   * @param {object} node
+   * @listens nodeAdded
+   */
   addNode(node) {
-    this.nodes[node.id] = node;
-    this.nodes[node.id].services = {};
+    this.nodes[node.host] = node;
+    this.nodes[node.host].services = {};
   }
 
+  /**
+   * Removes a node.
+   * @param {object} node
+   * @listens nodeRemoved
+   */
   removeNode(node) {
-    delete this.nodes[node.id];
+    delete this.nodes[node.host];
   }
 
+  /**
+   * Adds a service that is part of a known node.
+   * @param {object} service
+   * @listens serviceAdded
+   */
   addService(service) {
     this.nodes[service.node].services[service.id] = service;
   }
 
+  /**
+   * Removes a service from a known node.
+   * @param service
+   * @listens serviceRemoved
+   */
   removeService(service) {
     delete this.nodes[service.node].services[service.id];
   }

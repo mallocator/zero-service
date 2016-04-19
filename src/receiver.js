@@ -1,21 +1,21 @@
 'use strict';
 
-var store = require('./store');
+var zmq = require('zmq');
 
 
-class Listener {
+class Receiver {
   constructor(options, emitter) {
     this.options = options;
     this.emitter = emitter;
+    this.socket = zmq.socket('sub');
   }
-
 
   /**
    * @fires listening
    */
-  start() {
+  start(node) {
+    // TODO subscribe to n nodes for updates about the cluster
     // TODO listen to events coming in and dispatch them to the event listeners
-    this.emit('listening');
   }
 
   /**
@@ -26,12 +26,17 @@ class Listener {
     this.emit('disconnected');
   }
 
-  _onNodeAdded() {
-    this.emit('nodeAdded', id)
+
+  _onNodeAdded(node) {
+    this.socket.connect(node.host, err => {
+      // TODO handle err
+    });
   }
 
   _onNodeRemoved() {
-    this.emit('nodeRemoved', id)
+    this.socket.disconnect(node.host, err => {
+      // TODO handle err
+    });
   }
 
   _onServiceAdded() {
@@ -43,4 +48,4 @@ class Listener {
   }
 }
 
-module.exports = Listener;
+module.exports = Receiver;

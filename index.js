@@ -7,27 +7,10 @@ var _ = require('lodash');
 var events = require('eventemitter2');
 var shortId = require('shortid');
 
-var Listener = require('./src/listener');
-var Sender = require('./src/sender');
+var Cluster = require('./src/cluster');
 var Store = require('./src/store');
 var On = require('./src/on');
-
-
-/**
- * The default options object, that will be combined with any passed in options.
- */
-var defaultOptions = {
-  custer: {
-    name: 'zero'
-  },
-  port: 2206,
-  discovery: {
-    type: 'multicast'
-  },
-  nodes: {
-    maxPeers: Number.POSITIVE_INFINITY
-  }
-};
+var opts = require('./src/options');
 
 /**
  * This class bundles the API which allows a user to connect to a cluster and announce services.
@@ -43,15 +26,15 @@ class ZeroService extends events {
    */
 
   /**
-   * @event listening Fired when we start listening to connecting nodes.
+   * @event listening Fired when we start listening for connecting nodes.
    */
 
   /**
-   * @event discovered Fired when we have successfully discovered a node and told it about this node.
+   * @event discovered Fired when we have successfully discovered a node and set up communication with it.
    */
 
   /**
-   * @event nodeAdded  Fired when a node is added either from the network or locally
+   * @event ZeroService#nodeAdded  Fired when a node is added either from the network or locally
    * @type {Object}
    * @property {string} id  The id of the new node
    * @property {string} address The address of the new node
@@ -80,22 +63,22 @@ class ZeroService extends events {
    *
    * @param {Object|string} [options]  Global options object for this node or a path to a filename holding the options
    * @param {string} [options.id] A unique id to identify this node
-   * @param {number} [options.port=2206]  Port on which to listen for connecting nodes
+   * @param {string|number} [options.handshake=2205]  Port on which to initialize a cluster connection. This can either
+   * be a number which will be used to bind to tcp://0.0.0.0:<port> or the complete host string.
+   * @param {string|number} [options.listen]  Port on which to listen for cluster broadcasts.This can either be a number
+   * which will be used to bind to tcp://0.0.0.0:<port> or the complete host string.
    * @param {Object} [options.discovery]  Discovery options object, properties depend on the type
    * @param {string} [options.discovery.type='multicast'] The type of discovery to be used
+   * @param {string|string[]} [options.discovery.hosts] Used for type unicast. A list of nodes we should attempt connecting
+   * to. Note that the port of the host should be the handshake port of that node.
    */
   constructor(options) {
     super({
       newListener: false
     });
-    if (_.isString(options)) {
-      options = require(path.join(module.main.filename, options));
-    }
-    options = options || {};
-    this.options = Object.assign({}, defaultOptions, options);
-    this.listener = new Listener(this.options, this);
-    this.sender = new Sender(this.options, this);
+    this.options = opts.normalize(options);
     this.store = new Store(this.options, this);
+    this.cluster = new Cluster(this.options, this);
     this.on = new On(this);
     this.methods = [];
   }
@@ -107,18 +90,15 @@ class ZeroService extends events {
    * @fires discovered
    */
   connect() {
-    this.on.allOnce(['listening', 'discovered'], () => {
-      this.emit('connected');
-    });
-    this.listener.start();
     this._discover();
+    this.cluster.connect();
   }
 
   /**
    * @fires disconnected
    */
   disconnect() {
-    this.listener.stop();
+    this.receiver.stop();
   }
 
   /**
@@ -132,7 +112,12 @@ class ZeroService extends events {
    */
   addService(type, options) {
     var id = options && options.id ? options.id : shortId.generate();
-    this.sender.addService(type, options);
+    var service = {
+      id,
+      type,
+      node: this.options.id
+    };
+    this.propagator.addService(service);
     return id;
   }
 
@@ -244,10 +229,10 @@ class ZeroService extends events {
       let fileType = path.basename(file, path.extname(file));
       if (fileType == this.options.discovery.type) {
         this.methods[this.options.discovery.type] = require(path.join(__dirname, '/src', '/discovery', file));
-        return this.methods[this.options.discovery.type].discover(this.options, this);
+        this.methods[this.options.discovery.type].discover(this.options, this);
       }
     }
-    throw 'Unable to find discovery method of type ' + this.options.discovery.type;
+    throw new Error('Unable to find discovery method of type ' + this.options.discovery.type);
   }
 }
 
