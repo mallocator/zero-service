@@ -8,6 +8,8 @@ var events = require('eventemitter2');
 var shortId = require('shortid');
 
 var Listener = require('./src/listener');
+var Sender = require('./src/sender');
+var Store = require('./src/store');
 var On = require('./src/on');
 
 
@@ -91,7 +93,9 @@ class ZeroService extends events {
     }
     options = options || {};
     this.options = Object.assign({}, defaultOptions, options);
-    this.listener = new Listener(this.options);
+    this.listener = new Listener(this.options, this);
+    this.sender = new Sender(this.options, this);
+    this.store = new Store(this.options, this);
     this.on = new On(this);
     this.methods = [];
   }
@@ -128,6 +132,8 @@ class ZeroService extends events {
    */
   addService(type, options) {
     var id = options && options.id ? options.id : shortId.generate();
+    this.sender.addService(type, options);
+    return id;
   }
 
   /**
@@ -136,9 +142,7 @@ class ZeroService extends events {
    * @param id
    */
   removeService(id) {
-    // TODO remove service from cluster
-    // TODO show more info then just id (such as address or the node name)
-
+    this.send.removeService(id);
   }
 
   /**

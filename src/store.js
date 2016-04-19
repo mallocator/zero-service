@@ -1,26 +1,33 @@
 'use strict';
 
 class Store {
-  constructor(options) {
+  constructor(options, emitter) {
+    this.options = options;
+    this.emitter = emitter;
     this.nodes = {};
+
+    emitter.on('nodeAdded', this.addNode);
+    emitter.on('nodeRemoved', this.removeNode);
+    emitter.on('serviceAdded', this.addService);
+    emitter.on('serviceRemoved', this.removeService);
   }
 
   addNode(node) {
-    this.nodes[node.id] = {};
+    this.nodes[node.id] = node;
+    this.nodes[node.id].services = {};
   }
 
   removeNode(node) {
     delete this.nodes[node.id];
   }
 
-  addService(node, service) {
-    // TODO store something useful, such as ping time
-    this.nodes[node.id][service.id] = {};
+  addService(service) {
+    this.nodes[service.node].services[service.id] = service;
   }
 
-  removeService(node, service) {
-    delete this.nodes[node.id][service.id];
+  removeService(service) {
+    delete this.nodes[service.node].services[service.id];
   }
 }
 
-module.exports = new Store();
+module.exports = Store;
