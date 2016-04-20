@@ -1,5 +1,7 @@
 'use strict';
 
+var path = require('path');
+
 var _ = require('lodash');
 var shortId = require('shortid');
 
@@ -8,9 +10,6 @@ var shortId = require('shortid');
  * The options object that is made available to all instances in the service.
  * @typedef {object} Options
  * @property {string} [id]                          A unique id to identify this node
- * @property {string|number} [handshake=2205]       Port on which to initialize a cluster connection. This can either
- *                                                  be a number which will be used to bind to tcp://0.0.0.0:<port> or the
- *                                                  complete host string.
  * @property {string|number} [listen=2206]          Port on which to listen for cluster broadcasts.This can either be a number
  *                                                  which will be used to bind to tcp://0.0.0.0:<port> or the complete host
  *                                                  string.
@@ -20,19 +19,22 @@ var shortId = require('shortid');
  *                                                  Note that the port of the host should be the handshake port of that node.
  * @property {object} [nodes]                       Configuration options regarding nodes
  * @property {object} [node.maxPeers=INFINTY]       The maximum number of other nodes this service is going to connect.
+ * @property {object} [node.checkNetwork=false]     Flag that decides whether we know about all other nodes or need to ask
+ *                                                  around in the cluster. This value is set dynamically and should not be
+ *                                                  set by the user.
  */
 
 /**
  * The default options object, that will be combined with any passed in options.
  */
 exports.defaultOptions = {
-  handshake: 2205,
   listen: 2206,
   discovery: {
     type: 'multicast'
   },
   nodes: {
-    maxPeers: Number.POSITIVE_INFINITY
+    maxPeers: Number.POSITIVE_INFINITY,
+    checkNetwork: false
   },
   debug: false
 };
@@ -91,18 +93,6 @@ exports.listen = function() {
 };
 
 /**
- * Makes sure the connection string for direct connections is something zeromq can understand.
- */
-exports.handshake = function() {
-  if (_.isNumber(this.options.handshake)) {
-    this.options.handshake = 'tcp://0.0.0.0:' + this.options.handshake;
-  }
-  if (!exports.isValidHost(this.options.handshake)) {
-    throw new Error('Unable to connect with invalid host setting:' + this.options.handshake);
-  }
-};
-
-/**
  * Makes sure the discovery settings are valid.
  */
 exports.discovery = function() {
@@ -128,7 +118,7 @@ exports.discovery = function() {
       }
       _.map(this.options.discovery.hosts, elem => elem.trim());
       _.filter(this.options.discovery.hosts, elem => {
-        if (elem.length == 0) {
+        if (elem.length === 0) {
           return false;
         }
         if (!exports.isValidHost(elem)) {

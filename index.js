@@ -3,9 +3,9 @@
 var fs = require('fs');
 var path = require('path');
 
+var _ = require('lodash');
 var events = require('eventemitter2');
 var On = require('onall');
-var shortId = require('shortid');
 
 var Cluster = require('./src/cluster');
 var opts = require('./src/options');
@@ -25,7 +25,7 @@ var opts = require('./src/options');
  * @typedef {object} Service
  * @property {string} id    A unique id to identify this service
  * @property {string} node  The node id to which this service belongs
- * @property {string} type  The service type that we want to register. Can be any string that helps you categorize it.
+ * @property {number} port  The port on which we can connect to this service on other nodes
  */
 
 /**
@@ -110,30 +110,38 @@ class ZeroService extends events {
   /**
    * Adds a new service to the cluster and makes it available to all the nodes.
    * @fires serviceAdded
-   * @param {string} type               The type of service you want to register (any name you seem fit)
+   * @param {string|stringp[]} type     The type of service you want to register (any name you seem fit)
    * @param {Object} [options]          Optional options that otherwise will be auto generated
    * @param {String} [options.address]  Set your own custom address with which zeromq can talk to this service
    * @param {String} [options.id]       Set your own id, otherwise the library will generate one for you
-   * @returns {string} The unique id of this service
+   * @returns {ZeroService}
    */
   addService(type, options) {
-    var id = options && options.id ? options.id : shortId.generate();
-    var service = {
-      id,
-      type,
-      node: this.options.id
-    };
-    this.propagator.addService(service);
-    return id;
+    type = _.isArray(type) ? type : [ type ];
+    for (let id of _.uniq(type)) {
+      var port = options && options.port ? options.port : 2207;
+      var service = {
+        id,
+        port,
+        node: this.options.id
+      };
+      this.cluster.addService(service);
+    }
+    return this;
   }
 
   /**
    * Removes a node from the cluster.
    * @fires serviceRemoved
-   * @param id
+   * @param {string|string[]} type   The type of the service you want to remove from the cluster.
+   * @returns {ZeroService}
    */
-  removeService(id) {
-    this.send.removeService(id);
+  removeService(type) {
+    type = _.isArray(type) ? type : [ type ];
+    for (let id of _.uniq(type)) {
+      this.cluster.removeService(id);
+    }
+    return this;
   }
 
   // TODO check the zeromq docs for the exact api that we're trying to replicate here

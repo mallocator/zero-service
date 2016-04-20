@@ -44,6 +44,9 @@ class Broadcaster {
       this.knownNodes[node.id] = node;
       this.send('nodeAdded', node);
     }
+    if(this.knownNodes.length > this.options.nodes.maxPeers) {
+      this.options.nodes.checkNetwork = true;
+    }
   }
 
   /**
@@ -57,6 +60,9 @@ class Broadcaster {
       delete this.knownNodes[node.id];
       this.send('nodeRemoved', node);
     }
+    if(this.knownNodes.length == this.options.nodes.maxPeers) {
+      this.options.nodes.checkNetwork = false;
+    }
   }
 
   /**
@@ -65,7 +71,7 @@ class Broadcaster {
    * @private
    */
   _onServiceAdded(service) {
-    if (service.node = this.options.id) {
+    if (service.node == this.options.id) {
       this.send('serviceAdded', service);
     }
   }
@@ -76,8 +82,8 @@ class Broadcaster {
    * @private
    */
   _onServiceRemoved(service) {
-    if (service.node = this.options.id) {
-      this.send('serviceRemoved', service)
+    if (service.node == this.options.id) {
+      this.send('serviceRemoved', service);
     }
   }
 }

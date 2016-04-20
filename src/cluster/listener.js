@@ -38,18 +38,18 @@ class Listener {
       this.emitter.emit('nodeAdded', node);
     });
 
-    this.socket.bind(this.options.handshake, err => {
+    this.socket.bind(this.options.listen, err => {
       if (err) {
         return this.emitter.emit('error', err instanceof Error ? err : new Error(err));
       }
-      this.options.debug('Handshake listener successfully bound to', this.options.handshake);
+      this.options.debug('Handshake listener successfully bound to', this.options.listen);
       this.emitter.emit('listenerStarted');
     });
   }
 
   stop() {
-    this.socket.unbind(this.options.handshake, err => {
-      this.options.debug('Handshake listener has been unbound from', this.options.handshake);
+    this.socket.unbind(this.options.listen, err => {
+      this.options.debug('Handshake listener has been unbound from', this.options.listen);
       this.emitter.emit('listenerStopped');
     });
   }

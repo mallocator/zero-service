@@ -14,8 +14,7 @@ describe('handshake', () => {
     var listener = new Listener({
       id: 'listener',
       debug: function() {},
-      handshake: 'tcp://127.0.0.1:11111',
-      listen: 'tcp://127.0.0.1:11112'
+      listen: 'tcp://127.0.0.1:11111'
     }, listenerEmitter);
     listener.start();
 
@@ -24,15 +23,14 @@ describe('handshake', () => {
     new Sender({
       id: 'sender',
       debug: function() {},
-      handshake: 'tcp://127.0.0.1:22222',
-      listen: 'tcp://127.0.0.1:22223'
+      listen: 'tcp://127.0.0.1:22222'
     }, senderEmitter);
 
     var events = 0;
     listenerEmitter.on('nodeAdded', node => {
       expect(node).to.deep.equal({
           id: 'sender',
-          host: 'tcp://127.0.0.1:22223',
+          host: 'tcp://127.0.0.1:22222',
           services: {}
       });
       events++;
@@ -42,7 +40,7 @@ describe('handshake', () => {
     senderEmitter.on('clusterFound', nodes => {
       expect(nodes).to.deep.equal({
         listener: {
-          host: 'tcp://127.0.0.1:11112',
+          host: 'tcp://127.0.0.1:11111',
           id: 'listener',
           services: {}
         }

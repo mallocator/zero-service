@@ -4,6 +4,7 @@
 	"curly": true,
   "esversion": 6,
   "expr": true,
+  "eqeqeq": false,
   "forin": false,
   "freeze": true,
   "futurehostile": true,
@@ -15,7 +16,8 @@
 	"noarg": true,
 	"node": true,
   "shadow": true,
-	"strict": "global",
+	"strict": true,
 	"undef": true,
-	"unused": "vars"
+	"unused": "vars",
+  "-W093": false
 }
