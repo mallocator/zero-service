@@ -42,7 +42,63 @@ describe('broadcast', () => {
         bc.stop();
       });
 
-      bc.send('serviceAdded', 'test');
+      setTimeout(() => {
+        bc.send('serviceAdded', 'test');
+      }, 10);
+    });
+
+    it('should receive messages from multiple broadcasters', done => {
+      var rcEmitter = new Events();
+      rcEmitter.on('error', err => { throw err; });
+      new Receiver({
+        id: 'receiver',
+        debug: () => {}
+      }, rcEmitter);
+
+      var sources = 2;
+      var bcs = [];
+      for (let i = 0; i < sources; i++) {
+        let bcEmitter = new Events();
+        let bc = new Broadcaster({
+          id: 'broadcaster' + i,
+          debug: () => {},
+          listen: 'tcp://127.0.0.1:1111' + i
+        }, bcEmitter);
+        bcEmitter.on('error', err => { throw err; });
+        bc.start();
+
+        bcEmitter.on('ignoring', () => {
+          rcEmitter.emit('nodeRemoved', {
+            id: bc.options.id,
+            host: bc.options.listen
+          });
+        });
+
+        rcEmitter.emit('nodeAdded', {
+          id: 'broadcaster' + i,
+          host: 'tcp://127.0.0.1:1111' + i,
+          services: {}
+        });
+        bcs.push(bc);
+      }
+
+      let events = 0;
+      rcEmitter.on('serviceAdded', arg => {
+        expect(arg).to.equal('test');
+        events++;
+        if (events >= sources) {
+          for (let bc of bcs) {
+            bc.stop();
+          }
+          done();
+        }
+      });
+
+      for (let bc of bcs) {
+        setTimeout(() => {
+          bc.send('serviceAdded', 'test');
+        }, 10);
+      }
     });
 
     it('should send a message to all connected nodes', done => {
@@ -85,72 +141,9 @@ describe('broadcast', () => {
         });
       }
 
-      bc.send('serviceAdded', 'test');
-    });
-
-    it('should receive messages from multiple broadcasters', done => {
-      var rcEmitter = new Events();
-      rcEmitter.on('error', err => { throw err; });
-      new Receiver({
-        id: 'receiver',
-        debug: () => {}
-      }, rcEmitter);
-
-
-      var sources = 2;
-      var bcs = [];
-      for (var i = 0; i < sources; i++) {
-        var bcEmitter = new Events();
-        var bc = new Broadcaster({
-          id: 'broadcaster' + i,
-          debug: () => {},
-          listen: 'tcp://127.0.0.1:1111' + i
-        }, bcEmitter);
-        bcEmitter.on('error', err => { throw err; });
-        bc.start();
-        bcs.push(bc);
-
-        rcEmitter.emit('nodeAdded', {
-          id: 'broadcaster',
-          host: 'tcp://127.0.0.1:11110',
-          services: {}
-        });
-      }
-
-      var events = 0;
-      rcEmitter.on('serviceAdded', arg => {
-        expect(arg).to.equal('test');
-
-        bcEmitter.on('ignoring', () => {
-          events++;
-          if (events >= sources) {
-            for (let bc of bcs) {
-              rcEmitter.emit('nodeRemoved', {
-                id: bc.options.id,
-                host: bc.options.listen
-              });
-              bc.stop();
-              done();
-            }
-          }
-        });
-      });
-
-      for (let bc of bcs) {
+      setTimeout(() => {
         bc.send('serviceAdded', 'test');
-      }
-    });
-  });
-
-  describe('services', () => {
-    describe('DB strategy', () => {
-      it('should send a new service to all other nodes in the cluster');
-
-      it('should remove a node from all other nodes in the cluster');
-    });
-
-    describe('Network strategy', () => {
-      it('should ask all other nodes for a specific service');
+      }, 10);
     });
   });
 });
