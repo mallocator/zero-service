@@ -17,16 +17,6 @@ class Cluster {
 
   connect() {
     this.listener.start();
-    // TODO register event listeners that propagate nodes and services to other nodes.
-    // The actual replication depends on the algorithm chosen.
-  }
-
-  addService(type) {
-    // TODO broadcast to the cluster that you offer this service
-  }
-
-  removeService(type) {
-    // TODO broadcast to the cluster that you no longer offer this service
   }
 }
 

@@ -7,6 +7,10 @@ var zmq = require('zmq');
  * Listener that awaits new nodes to which it replies with a list of known nodes in the cluster.
  */
 class Listener {
+  /**
+   * @param {Options} options
+   * @param {EventEmitter} emitter
+   */
   constructor(options, emitter) {
     this.options = options;
     this.knownNodes = {
@@ -18,18 +22,20 @@ class Listener {
     };
     this.emitter = emitter;
     this.emitter.on('nodeAdded', this._onNodeAdded.bind(this));
+    this.emitter.on('nodeRemoved', this._onNodeRemoved.bind(this));
     this.emitter.on('serviceAdded', this._onServiceAdded.bind(this));
+    this.emitter.on('serviceRemoved', this._onServiceRemoved.bind(this));
     this.socket = zmq.socket('rep');
   }
 
   start() {
-    this.socket.on('message', host => {
-      host = JSON.parse(host.toString('utf8'));
-      this.options.debug('Handshake listener received a connect request:', host);
+    this.socket.on('message', node => {
+      node = JSON.parse(node.toString('utf8'));
+      this.options.debug('Handshake listener received a connect request:', node);
       this.socket.send(JSON.stringify(this.knownNodes), null, err => {
         err && this.emitter.emit('error', err instanceof Error ? err : new Error(err));
       });
-      this.emitter.emit('nodeAdded', host);
+      this.emitter.emit('nodeAdded', node);
     });
 
     this.socket.bind(this.options.handshake, err => {
@@ -48,13 +54,44 @@ class Listener {
     });
   }
 
+  /**
+   * Triggered when we receive a new node connection that is trying to join the cluster. Updates the information that we
+   * send to new connecting nodes.
+   * @param {Node} node
+   * @private
+     */
   _onNodeAdded(node) {
     this.options.debug('Handshake listener added a new peer node: ', node);
     this.knownNodes[node.id] = node;
   }
 
+  /**
+   * Triggered when a node left the cluster. Updates the information that we send to new connecting nodes.
+   * @param {Node} node
+   * @private
+   */
+  _onNodeRemoved(node) {
+    this.options.debug('Handshake listener added a new peer node: ', node);
+    delete this.knownNodes[node.id];
+  }
+
+  /**
+   * Stores the information about all the known nodes. Triggered whenever a node adds a new service. Updates the
+   * information that we send to new connecting nodes.
+   * @param {Service} service
+   * @private
+   */
   _onServiceAdded(service) {
     this.knownNodes[service.node].services[service.id] = service;
+  }
+
+  /**
+   * Triggered whenever a service has ben stopped. Updates the information that we send to new connecting nodes.
+   * @param {Service} service
+   * @private
+   */
+  _onServiceRemoved(service) {
+    delete this.knownNodes[service.node].services[service.id];
   }
 }
 

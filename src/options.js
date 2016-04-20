@@ -3,13 +3,29 @@
 var _ = require('lodash');
 var shortId = require('shortid');
 
+
+/**
+ * The options object that is made available to all instances in the service.
+ * @typedef {object} Options
+ * @property {string} [id]                          A unique id to identify this node
+ * @property {string|number} [handshake=2205]       Port on which to initialize a cluster connection. This can either
+ *                                                  be a number which will be used to bind to tcp://0.0.0.0:<port> or the
+ *                                                  complete host string.
+ * @property {string|number} [listen=2206]          Port on which to listen for cluster broadcasts.This can either be a number
+ *                                                  which will be used to bind to tcp://0.0.0.0:<port> or the complete host
+ *                                                  string.
+ * @property {Object} [discovery]                   Discovery options object, properties depend on the type
+ * @property {string} [discovery.type='multicast']  The type of discovery to be used
+ * @property {string|string[]} [discovery.hosts]    Used for type unicast. A list of nodes we should attempt connecting to.
+ *                                                  Note that the port of the host should be the handshake port of that node.
+ * @property {object} [nodes]                       Configuration options regarding nodes
+ * @property {object} [node.maxPeers=INFINTY]       The maximum number of other nodes this service is going to connect.
+ */
+
 /**
  * The default options object, that will be combined with any passed in options.
  */
 exports.defaultOptions = {
-  cluster: {
-    name: 'zero'
-  },
   handshake: 2205,
   listen: 2206,
   discovery: {
@@ -59,16 +75,6 @@ exports.id = function() {
     this.options.id = this.options.id.trim();
   } else {
     this.options = shortId.generate();
-  }
-};
-
-/**
- * Checks that the cluster we're trying to connect to has a name.
- */
-exports.cluster = function() {
-  this.options.cluster.name = this.options.cluster.name.trim();
-  if (!this.options.cluster.name.length) {
-    throw new Error('No cluster name has been set');
   }
 };
 

@@ -7,6 +7,10 @@ var zmq = require('zmq');
  * A connector class that creates an initial connection to another node to receive a connectable cluster state
  */
 class Sender {
+  /**
+   * @param {Options} options
+   * @param {EventEmitter} emitter
+   */
   constructor(options, emitter) {
     this.options = options;
     this.emitter = emitter;
@@ -18,6 +22,7 @@ class Sender {
     };
     emitter.on('discovered', this._connect.bind(this));
     emitter.on('serviceAdded', this._onServiceAdded.bind(this));
+    emitter.on('serviceRemoved', this._onServiceRemoved.bind(this));
   }
 
   /**
@@ -44,9 +49,25 @@ class Sender {
     });
   }
 
+  /**
+   * Updates the information that we send on first connection to the cluster we are bout to join.
+   * @param {Service} service
+   * @private
+   */
   _onServiceAdded(service) {
     if (service.node == this.ownHost.id) {
       this.ownHost.services[service.id] = service;
+    }
+  }
+
+  /**
+   * Updates the information that we send on first connection to the cluster we are bout to join.
+   * @param {Service} service
+   * @private
+   */
+  _onServiceRemoved(service) {
+    if (service.node == this.ownHost.id) {
+      delete this.ownHost.services[service.id];
     }
   }
 }

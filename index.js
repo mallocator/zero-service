@@ -3,14 +3,30 @@
 var fs = require('fs');
 var path = require('path');
 
-var _ = require('lodash');
 var events = require('eventemitter2');
+var On = require('onall');
 var shortId = require('shortid');
 
 var Cluster = require('./src/cluster');
-var Store = require('./src/store');
-var On = require('./src/on');
 var opts = require('./src/options');
+
+/**
+ * A node holds all information about one instance of ZeroService with all the services that are registered to that
+ * instance.
+ * @typedef {object} Node
+ * @property {string} id          A unique id to identify this node
+ * @property {string} host        A host address that is usable by zeromq
+ * @property {Service[]} services A list of services that are available on this node
+ */
+
+/**
+ * Holds the information for a service that is made available on a node. A service always needs to have an existing
+ * node.
+ * @typedef {object} Service
+ * @property {string} id    A unique id to identify this service
+ * @property {string} node  The node id to which this service belongs
+ * @property {string} type  The service type that we want to register. Can be any string that helps you categorize it.
+ */
 
 /**
  * This class bundles the API which allows a user to connect to a cluster and announce services.
@@ -61,23 +77,13 @@ class ZeroService extends events {
 
   /**
    *
-   * @param {Object|string} [options]  Global options object for this node or a path to a filename holding the options
-   * @param {string} [options.id] A unique id to identify this node
-   * @param {string|number} [options.handshake=2205]  Port on which to initialize a cluster connection. This can either
-   * be a number which will be used to bind to tcp://0.0.0.0:<port> or the complete host string.
-   * @param {string|number} [options.listen]  Port on which to listen for cluster broadcasts.This can either be a number
-   * which will be used to bind to tcp://0.0.0.0:<port> or the complete host string.
-   * @param {Object} [options.discovery]  Discovery options object, properties depend on the type
-   * @param {string} [options.discovery.type='multicast'] The type of discovery to be used
-   * @param {string|string[]} [options.discovery.hosts] Used for type unicast. A list of nodes we should attempt connecting
-   * to. Note that the port of the host should be the handshake port of that node.
+   * @param {Options} [options]  Global options object for this node or a path to a filename holding the options
    */
   constructor(options) {
     super({
       newListener: false
     });
     this.options = opts.normalize(options);
-    this.store = new Store(this.options, this);
     this.cluster = new Cluster(this.options, this);
     this.on = new On(this);
     this.methods = [];
