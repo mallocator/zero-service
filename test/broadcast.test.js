@@ -10,8 +10,8 @@ var Receiver = require('../src/cluster/receiver');
 describe('broadcast', () => {
   describe('nodes', () => {
     it('should send a message to the only other connected node', done => {
-      var bcEmitter = new Events();
-      var bc = new Broadcaster({
+      let bcEmitter = new Events();
+      let bc = new Broadcaster({
         id: 'broadcaster',
         debug: () => {},
         listen: 'tcp://127.0.0.1:11111'
@@ -19,7 +19,7 @@ describe('broadcast', () => {
       bcEmitter.on('error', err => { throw err; });
       bc.start();
 
-      var rcEmitter = new Events();
+      let rcEmitter = new Events();
       rcEmitter.on('error', err => { throw err; });
       new Receiver({
         id: 'receiver',
@@ -33,7 +33,10 @@ describe('broadcast', () => {
       });
 
       rcEmitter.on('serviceAdded', arg => {
-        expect(arg).to.equal('test');
+        expect(arg).to.deep.equal({
+          node: 'broadcaster',
+          id: 'test'
+        });
         rcEmitter.emit('nodeRemoved', {
           id: bc.options.id,
           host: bc.options.listen
@@ -43,20 +46,23 @@ describe('broadcast', () => {
       });
 
       setTimeout(() => {
-        bc.send('serviceAdded', 'test');
+        bcEmitter.emit('serviceAdded', {
+          node: 'broadcaster',
+          id: 'test'
+        });
       }, 10);
     });
 
     it('should receive messages from multiple broadcasters', done => {
-      var rcEmitter = new Events();
+      let rcEmitter = new Events();
       rcEmitter.on('error', err => { throw err; });
       new Receiver({
         id: 'receiver',
         debug: () => {}
       }, rcEmitter);
 
-      var sources = 2;
-      var bcs = [];
+      let sources = 2;
+      let bcs = [];
       for (let i = 0; i < sources; i++) {
         let bcEmitter = new Events();
         let bc = new Broadcaster({
@@ -102,17 +108,17 @@ describe('broadcast', () => {
     });
 
     it('should send a message to all connected nodes', done => {
-      var bcEmitter = new Events();
+      let bcEmitter = new Events();
       bcEmitter.on('error', err => { throw err; });
-      var bc = new Broadcaster({
+      let bc = new Broadcaster({
         id: 'broadcaster',
         debug: console.log,
         listen: 'tcp://127.0.0.1:11111'
       }, bcEmitter);
       bc.start();
 
-      var receivers = 2;
-      var events = 0;
+      let receivers = 2;
+      let events = 0;
       for (let i = 0; i < receivers; i++) {
         let rcEmitter = new Events();
         rcEmitter.on('error', err => { throw err; });
@@ -128,7 +134,9 @@ describe('broadcast', () => {
         });
 
         rcEmitter.on('serviceAdded', arg => {
-          expect(arg).to.equal('test');
+          expect(arg).to.deep.equal({
+            node: 'broadcaster'
+          });
           rcEmitter.emit('nodeRemoved', {
             id: bc.options.id,
             host: bc.options.listen
@@ -142,7 +150,9 @@ describe('broadcast', () => {
       }
 
       setTimeout(() => {
-        bc.send('serviceAdded', 'test');
+        bcEmitter.emit('serviceAdded', {
+          node: 'broadcaster'
+        });
       }, 10);
     });
   });
