@@ -38,11 +38,15 @@ class ZeroService extends events {
    */
 
   /**
-   * @event disconnected Fired when we disconnected form the cluster and are no longer listening for incoming nodes.
+   * @event disconnected Fired when we disconnected form the cluster and are no longer receiving updates.
    */
 
   /**
-   * @event listening Fired when we start listening for connecting nodes.
+   * @event listening Fired when we start listening for connecting nodes to which to publish messages to.
+   */
+
+  /**
+   * @event ignoring Fired when the broadcaster no longer accepts connections from receivers and is turned off.
    */
 
   /**

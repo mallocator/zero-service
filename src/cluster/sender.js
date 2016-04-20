@@ -39,8 +39,8 @@ class Sender {
 
     this.socket.on('message', msg => {
       this.options.debug('Handshake sender received node list from ' + node.host);
-      this.emitter.emit('clusterFound', JSON.parse(msg.toString('utf8')));
       zmq.disconnect(node);
+      this.emitter.emit('clusterFound', JSON.parse(msg.toString('utf8')));
     });
 
     this.socket.send(JSON.stringify(this.ownHost), null, err => {

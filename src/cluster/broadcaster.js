@@ -12,19 +12,32 @@ class Broadcaster {
     this.options = options;
     this.emitter = emitter;
     this.socket = zmq.socket('pub');
-    this.socket.bind(options.listen, err => {
-      if (err) {
-        return this.emitter.emit('error', err instanceof Error ? err : new Error(err));
-      }
-      this.options.debug('Broadcaster is listening as', options.listen);
-      this.emitter.emit('listening');
-    });
     this.knownNodes = {};
     this.emitter.on('nodeAdded', this._onNodeAdded.bind(this));
     this.emitter.on('nodeRemoved', this._onNodeRemoved.bind(this));
     this.emitter.on('serviceAdded', this._onServiceAdded.bind(this));
     this.emitter.on('serviceRemoved', this._onServiceRemoved.bind(this));
   }
+
+  start() {
+    this.socket.bind(this.options.listen, err => {
+      if (err) {
+        return this.emitter.emit('error', err instanceof Error ? err : new Error(err));
+      }
+      this.options.debug('Broadcaster is listening as', this.options.listen);
+      this.emitter.emit('listening');
+    });
+  }
+
+  stop() {
+    this.socket.unbind(this.options.listen, err => {
+      if (err) {
+        return this.emitter.emit('error', err instanceof Error ? err : new Error(err));
+      }
+      this.emitter.emit('ignoring');
+    });
+  }
+
 
   send(topic, msg) {
     this.socket.send([topic, JSON.stringify(msg)], null, err => {
