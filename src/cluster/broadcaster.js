@@ -13,12 +13,14 @@ class Broadcaster {
         return this.emitter.emit('error', err instanceof Error ? err : new Error(err));
       }
       this.options.debug('Broadcaster is listening as', options.listen);
-      this.emitter.emit('listening')
+      this.emitter.emit('listening');
     });
   }
 
   send(topic, msg) {
-    this.socket.send(topic, msg);
+    this.socket.send([topic, msg], null, err => {
+      err &&  this.emitter.emit('error', err instanceof Error ? err : new Error(err));
+    });
   }
 }
 

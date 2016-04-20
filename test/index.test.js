@@ -6,7 +6,7 @@ var Zero = require('../');
 
 
 describe('zero-services', () => {
-  it('should connect to a cluster', () => {
+  it('should be able to create an instance', () => {
     new Zero();
   });
 });

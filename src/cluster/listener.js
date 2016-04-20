@@ -9,9 +9,16 @@ var zmq = require('zmq');
 class Listener {
   constructor(options, emitter) {
     this.options = options;
-    this.knownNodes = [ { host: this.options.listen } ];
+    this.knownNodes = {
+      [this.options.id] : {
+        id: this.options.id,
+        host: this.options.listen,
+        services: {}
+      }
+    };
     this.emitter = emitter;
     this.emitter.on('nodeAdded', this._onNodeAdded.bind(this));
+    this.emitter.on('serviceAdded', this._onServiceAdded.bind(this));
     this.socket = zmq.socket('rep');
   }
 
@@ -19,8 +26,10 @@ class Listener {
     this.socket.on('message', host => {
       host = JSON.parse(host.toString('utf8'));
       this.options.debug('Handshake listener received a connect request:', host);
-      this.socket.send(JSON.stringify(this.knownNodes));
-      this.emitter.emit('nodeAdded', { host });
+      this.socket.send(JSON.stringify(this.knownNodes), null, err => {
+        err && this.emitter.emit('error', err instanceof Error ? err : new Error(err));
+      });
+      this.emitter.emit('nodeAdded', host);
     });
 
     this.socket.bind(this.options.handshake, err => {
@@ -41,7 +50,11 @@ class Listener {
 
   _onNodeAdded(node) {
     this.options.debug('Handshake listener added a new peer node: ', node);
-    this.knownNodes.push(node);
+    this.knownNodes[node.id] = node;
+  }
+
+  _onServiceAdded(service) {
+    this.knownNodes[service.node].services[service.id] = service;
   }
 }
 

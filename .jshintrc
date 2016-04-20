@@ -1,14 +1,21 @@
 {
-	"node": true,
-	"esnext": true,
 	"bitwise": true,
 	"camelcase": true,
 	"curly": true,
+  "esversion": 6,
+  "expr": true,
+  "forin": false,
+  "freeze": true,
+  "futurehostile": true,
 	"immed": true,
+  "latedef": "nofunc",
+  "maxparams": 5,
+	"mocha": true,
 	"newcap": true,
 	"noarg": true,
+	"node": true,
+  "shadow": true,
+	"strict": "global",
 	"undef": true,
-	"unused": "vars",
-	"strict": true,
-	"mocha": true
+	"unused": "vars"
 }

@@ -16,7 +16,7 @@ class Receiver {
   _onNodesAdded(nodes) {
     nodes = _.isArray(nodes) ? nodes : [ nodes ];
     for (let node of nodes) {
-        // TODO limit number of nodes to connect to via options
+      // TODO limit number of nodes to connect to via options
       if (!this.knownHosts[node]) {
         this.socket.connect(node.host);
         this.options.debug('Receiver connected to host', node.host);

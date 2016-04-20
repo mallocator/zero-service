@@ -52,6 +52,17 @@ exports.isValidHost = function(host) {
 };
 
 /**
+ * Sets an automatically generate id if none has been given.
+ */
+exports.id = function() {
+  if (this.options.id) {
+    this.options.id = this.options.id.trim();
+  } else {
+    this.options = shortId.generate();
+  }
+};
+
+/**
  * Checks that the cluster we're trying to connect to has a name.
  */
 exports.cluster = function() {
