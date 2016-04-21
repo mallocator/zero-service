@@ -4,6 +4,10 @@ var _ = require('lodash');
 var zmq = require('zmq');
 
 
+/**
+ * The receiver is responsible for relaying all state updates of the cluster. The receiver connects to multiple nodes
+ * and translates cluster events to local events.
+ */
 class Receiver {
   /**
    * @param {Options} options
@@ -22,13 +26,19 @@ class Receiver {
   /**
    * Adds the node to this hosts list of known nodes.
    * @param {Node|Node[]} nodes
+   * @fires nodeRemoved
+   * @fires connected
    * @private
      */
   _onNodesAdded(nodes) {
     nodes = _.isArray(nodes) ? nodes : [ nodes ];
     for (let node of nodes) {
-      // TODO limit number of nodes to connect to via options
-      if (!this.knownNodes[node.id]) {
+      if (this.knownNodes[node.id]) {
+        this.options.debug('Receiver is ignoring host because this node already knows it', node.host);
+      } else if(Object.keys(this.knownNodes).length > this.options.nodes.maxPeers) {
+        this.options.debug('Receiver is ignoring host because maxPeers(', this.options.nodes.maxPeers, ') was reached: ', node.host);
+      } else {
+        // TODO monitor the socket so that if a node disconnects we can notify the rest of the cluster that it's gone
         this.knownNodes[node.id] = node;
         this.socket.connect(node.host);
         this.options.debug('Receiver connected to host', node.host);
@@ -38,8 +48,6 @@ class Receiver {
         this.socket.subscribe('serviceRemoved');
         this.socket.on('message', this._onMessage.bind(this));
         this.emitter.emit('connected');
-      } else {
-        this.options.debug('Receiver is ignoring host because this node already knows it', node.host);
       }
     }
   }
@@ -55,6 +63,7 @@ class Receiver {
 
   /**
    * @param {Node} node
+   * @fires disconnected
    * @private
      */
   _onNodeRemoved(node) {

@@ -95,9 +95,9 @@ class ZeroService extends events {
 
   /**
    * Starts looking for other nodes using the given discovery method and listening for incoming node connects.
-   * @fires connected
-   * @fires listening
    * @fires discovered
+   * @fires listening
+   * @fires connected
    */
   connect() {
     this._discover();
@@ -105,6 +105,7 @@ class ZeroService extends events {
   }
 
   /**
+   * @fires ignoring
    * @fires disconnected
    */
   disconnect() {
@@ -114,7 +115,7 @@ class ZeroService extends events {
   /**
    * Adds a new service to the cluster and makes it available to all the nodes.
    * @fires serviceAdded
-   * @param {string|stringp[]} type     The type of service you want to register (any name you seem fit)
+   * @param {string|string[]} type      The type of service you want to register (any name you seem fit)
    * @param {Object} [options]          Optional options that otherwise will be auto generated
    * @param {String} [options.address]  Set your own custom address with which zeromq can talk to this service
    * @param {String} [options.id]       Set your own id, otherwise the library will generate one for you

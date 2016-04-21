@@ -14,12 +14,19 @@ class Sender {
   constructor(options, emitter) {
     this.options = options;
     this.emitter = emitter;
+    this.connected = false;
     this.socket = zmq.socket('req');
     this.ownHost = {
       id: this.options.id,
       host: this.options.listen,
       services: {}
     };
+    emitter.on('connected', () => {
+      this.connected = true;
+    });
+    emitter.on('disconnected', () => {
+      this.connected = false;
+    });
     emitter.on('discovered', this._connect.bind(this));
     emitter.on('serviceAdded', this._onServiceAdded.bind(this));
     emitter.on('serviceRemoved', this._onServiceRemoved.bind(this));
@@ -31,6 +38,10 @@ class Sender {
    * @private
    */
   _connect(nodes) {
+    if (this.connected) {
+      this.options.debug('Not trying to initiate handshake as we already seem to be connected');
+      return;
+    }
     nodes = _.isArray(nodes) ? nodes : [nodes];
     // TODO try to connect to multiple nodes until one is successful
     let node = nodes[0];

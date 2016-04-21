@@ -23,7 +23,10 @@ describe('broadcast', () => {
       rcEmitter.on('error', err => { throw err; });
       new Receiver({
         id: 'receiver',
-        debug: () => {}
+        debug: () => {},
+        nodes: {
+          maxPeers: Number.POSITIVE_INFINITY
+        }
       }, rcEmitter);
 
       rcEmitter.emit('nodeAdded', {
@@ -58,7 +61,10 @@ describe('broadcast', () => {
       rcEmitter.on('error', err => { throw err; });
       new Receiver({
         id: 'receiver',
-        debug: () => {}
+        debug: () => {},
+        nodes: {
+          maxPeers: Number.POSITIVE_INFINITY
+        }
       }, rcEmitter);
 
       let sources = 2;
@@ -124,7 +130,10 @@ describe('broadcast', () => {
         rcEmitter.on('error', err => { throw err; });
         new Receiver({
           id: 'receiver' + i,
-          debug: console.log
+          debug: console.log,
+          nodes: {
+            maxPeers: Number.POSITIVE_INFINITY
+          }
         }, rcEmitter);
 
         rcEmitter.emit('nodeAdded', {

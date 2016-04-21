@@ -24,6 +24,9 @@ var shortId = require('shortid');
  *                                                  set by the user.
  */
 
+
+var ipv4regex = /((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)/;
+
 /**
  * The default options object, that will be combined with any passed in options.
  */
@@ -37,6 +40,16 @@ exports.defaultOptions = {
     checkNetwork: false
   },
   debug: false
+};
+
+/**
+ * The default options for when you choose to use multicast for discovery.
+ */
+exports.defaultMulticast = {
+  type: 'multicast',
+  port: 22060,
+  address: '0.0.0.0',
+  interval: 1000
 };
 
 /**
@@ -132,7 +145,13 @@ exports.discovery = function() {
       break;
 
     case 'multicast':
-      // TODO make sure that a port(-range) has been set that we want to check
+      this.options.discovery = Object.assign({}, exports.defaultMulticast, this.options.discovery);
+      if (!_.isNumber(this.options.discovery.port) || this.options.discovery.port < 1 || this.options.discovery.port > 65535) {
+        throw new Error('The multicast port needs to be a valid number between 1 and 65535');
+      }
+      if (!this.options.discovery.address.match(ipv4regex)) {
+        throw new Error('The given address is not a valid ipv4');
+      }
       break;
 
     case 'aws':
