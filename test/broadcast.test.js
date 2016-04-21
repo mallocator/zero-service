@@ -118,7 +118,7 @@ describe('broadcast', () => {
       bcEmitter.on('error', err => { throw err; });
       let bc = new Broadcaster({
         id: 'broadcaster',
-        debug: console.log,
+        debug: () => {},
         listen: 'tcp://127.0.0.1:11111'
       }, bcEmitter);
       bc.start();
@@ -130,7 +130,7 @@ describe('broadcast', () => {
         rcEmitter.on('error', err => { throw err; });
         new Receiver({
           id: 'receiver' + i,
-          debug: console.log,
+          debug: () => {},
           nodes: {
             maxPeers: Number.POSITIVE_INFINITY
           }

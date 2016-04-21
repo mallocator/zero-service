@@ -2,6 +2,7 @@
 
 var dgram = require('dgram');
 
+
 /**
  * The global {@link Options} object.
  * @type Options
@@ -19,6 +20,13 @@ exports.emitter = null;
  * @type {dgram.Socket}
  */
 exports.socket = null;
+
+/**
+ * The interval reference used to turn off sending messages once we have discovered another node.
+ * @type {null}
+ */
+exports.interval = null;
+
 /**
  * Creates a UPD servce that listens for incoming messages and at the same time broadcasts messages out until we have
  * managed to find a cluster.
@@ -30,29 +38,50 @@ exports.discover = function(options, emitter) {
   exports.emitter = emitter;
   emitter.on('connected', exports.stop);
   emitter.on('disconnected', exports.start);
-  exports.start();
+  exports.start(options);
 };
 
-exports.start = function() {
+/**
+ * @param {Options} [options] Optional options object that allows to override the cached version.
+ */
+exports.start = function(options) {
+  options = options || exports.options;
   var socket = exports.socket = dgram.createSocket("udp4");
+
   socket.on('listening', () => {
-    exports.options.debug('Listening for other nodes using multicast on port', exports.options.discovery.port);
+    options.debug('Listening for other nodes using multicast on port', options.discovery.port);
   });
   socket.on('message', msg => {
-    exports.emitter.emit('discovered', msg.toString('utf8'));
+    msg = msg.toString('utf8');
+    if (msg != options.listen) {
+      exports.emitter.emit('discovered', msg);
+    }
   });
-  socket.bind(() => {
+  socket.bind(options.discovery.port, options.discovery.address, () => {
     socket.setBroadcast(true);
-    setInterval(() => {
-      var message = new Buffer(exports.options.listen, 'utf8');
-      socket.send(message, 0, message.length, exports.options.discovery.port, exports.options.discovery.address);
-    }, exports.options.discovery.interval);
+    exports.interval = setInterval(() => {
+      var message = new Buffer(options.listen, 'utf8');
+      var port = options.discovery.sendPort || options.discovery.port;
+      socket.send(message, 0, message.length, port, options.discovery.broadcast, err => {
+        if (err) {
+          throw new Error(err);
+        }
+      });
+    }, options.discovery.interval);
   });
 };
 
+/**
+ * Stops the broadcast listener and sender as well close the udp socket.
+ */
 exports.stop = function() {
-  exports.socket.close();
-  exports.removeListener('connected', exports.stop);
-  exports.removeListener('disconnected', exports.start);
-  delete exports.socket;
+  exports.interval && clearInterval(exports.interval);
+  if (exports.emitter) {
+    exports.emitter.removeListener('connected', exports.stop);
+    exports.emitter.removeListener('disconnected', exports.start);
+  }
+  if (exports.socket) {
+    exports.socket.close();
+    delete exports.socket;
+  }
 };

@@ -13,10 +13,9 @@ var shortId = require('shortid');
  * @property {string|number} [listen=2206]          Port on which to listen for cluster broadcasts.This can either be a number
  *                                                  which will be used to bind to tcp://0.0.0.0:<port> or the complete host
  *                                                  string.
- * @property {Object} [discovery]                   Discovery options object, properties depend on the type
- * @property {string} [discovery.type='multicast']  The type of discovery to be used
- * @property {string|string[]} [discovery.hosts]    Used for type unicast. A list of nodes we should attempt connecting to.
- *                                                  Note that the port of the host should be the handshake port of that node.
+ * @property {Discovery} [discovery]                Discovery options object, properties depend on the type (default=multicast)
+ * @property {string} [discovery.type='multicast']  The type of discovery to be used. See {@link UnicastDiscovery},
+ *                                                  {@link MulticastDiscovery}, {@link AwsDiscovery}
  * @property {object} [nodes]                       Configuration options regarding nodes
  * @property {object} [node.maxPeers=INFINTY]       The maximum number of other nodes this service is going to connect.
  * @property {object} [node.checkNetwork=false]     Flag that decides whether we know about all other nodes or need to ask
@@ -24,11 +23,27 @@ var shortId = require('shortid');
  *                                                  set by the user.
  */
 
+/**
+ *  @typedef {object} Discovery
+ *  @property {string} type The type of discovery to be used, possible options are unicast, multicast and aws.
+ */
 
+/**
+ * @typedef {object} UnicastDiscovery
+ * @extends Discovery
+ * @property {string|string[]} hosts  Used for type unicast. A list of nodes we should attempt connecting to.
+ *                                    Note that the port of the host should be the handshake port of that node.
+ */
+
+/**
+ * Regular expression that checks for a valid ipv4.
+ * @type {RegExp}
+ */
 var ipv4regex = /((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)/;
 
 /**
  * The default options object, that will be combined with any passed in options.
+ * @type {Options}
  */
 exports.defaultOptions = {
   listen: 2206,
@@ -44,12 +59,29 @@ exports.defaultOptions = {
 
 /**
  * The default options for when you choose to use multicast for discovery.
+ * @typedef {object} MulticastDiscovery
+ * @extends Discovery
+ * @property {number} [port=22060]                The port on which to listen for broadcasts
+ * @property {string} [address=0.0.0.0]           The adapter address on which to listen for broadcasts
+ * @property {number} [sendPort=22060]            The port on which to send broadcast messages
+ * @property {string} [broadcast=255.255.255.255] The address used to broadcast this node information on
+ * @property {number} [interval=1000]             The interval with which messages are sent in ms.
  */
 exports.defaultMulticast = {
   type: 'multicast',
   port: 22060,
   address: '0.0.0.0',
+  broadcast: '255.255.255.255',
   interval: 1000
+};
+
+/**
+ * The default options for when you choose AWS for discovery.
+ * @typedef {object} AwsDiscovery
+ * @extends Discovery
+ */
+exports.defaultAws = {
+
 };
 
 /**
@@ -77,9 +109,7 @@ exports.normalize = function(options) {
  * @returns {Array|{index: number, input: string}|*}
  */
 exports.isValidHost = function(host) {
-  // TODO make this a better regex
-  return !!host.match(/^(tcp|ipc|inproc|pgm|epgm):\/\/\w/);
-  // TODO check if we can actually bind to this host/port
+  return !!host.match(/^(tcp|ipc|inproc|pgm|epgm):\/\/[\w\d\._-]+:\d{1,5}/);
 };
 
 /**
@@ -150,12 +180,15 @@ exports.discovery = function() {
         throw new Error('The multicast port needs to be a valid number between 1 and 65535');
       }
       if (!this.options.discovery.address.match(ipv4regex)) {
-        throw new Error('The given address is not a valid ipv4');
+        throw new Error('The given multicast host is not a valid ipv4');
+      }
+      if (!this.options.discovery.broadcast.match(ipv4regex)) {
+        throw new Error('The given broadcast address is not a valid ipv4');
       }
       break;
 
     case 'aws':
-      // TODO check for auth tokens
+      this.options.discovery = Object.assign({}, exports.defaultAws, this.options.discovery);
       break;
   }
 };
