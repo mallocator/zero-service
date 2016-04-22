@@ -17,6 +17,7 @@ class Sender {
     this.connected = false;
     this.socket = zmq.socket('req');
     this.ownHost = {
+      cluster: this.options.cluster.name,
       id: this.options.id,
       host: this.options.listen,
       services: {}

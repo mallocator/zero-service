@@ -10,6 +10,7 @@ var shortId = require('shortid');
  * The options object that is made available to all instances in the service.
  * @typedef {object} Options
  * @property {string} [id]                          A unique id to identify this node
+ * @property {string} [name]                        A cluster name if you want to run multiple clusters in parallel
  * @property {string|number} [listen=2206]          Port on which to listen for cluster broadcasts.This can either be a number
  *                                                  which will be used to bind to tcp://0.0.0.0:<port> or the complete host
  *                                                  string.
@@ -46,6 +47,9 @@ var ipv4regex = /((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d
  * @type {Options}
  */
 exports.defaultOptions = {
+  cluster: {
+    name: 'zero'
+  },
   listen: 2206,
   discovery: {
     type: 'multicast'
@@ -146,6 +150,15 @@ exports.listen = function() {
   }
   if (!exports.isValidHost(this.options.listen)) {
     throw new Error('Unable to listen with invalid host setting:' + this.options.listen);
+  }
+};
+
+/**
+ * Makes sure that all required cluster options are set.
+ */
+exports.cluster = function() {
+  if (_.isEmpty(this.options.cluster.name)) {
+    throw new Error('No cluster name has been set');
   }
 };
 

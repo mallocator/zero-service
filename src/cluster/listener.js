@@ -31,11 +31,17 @@ class Listener {
   start() {
     this.socket.on('message', node => {
       node = JSON.parse(node.toString('utf8'));
-      this.options.debug('Handshake listener received a connect request:', node);
-      this.socket.send(JSON.stringify(this.knownNodes), null, err => {
-        err && this.emitter.emit('error', err instanceof Error ? err : new Error(err));
-      });
-      this.emitter.emit('nodeAdded', node);
+      if (node.cluster == this.options.cluster.name) {
+        delete node.cluster;
+        this.options.debug('Handshake listener received a connect request:', node);
+        this.socket.send(JSON.stringify(this.knownNodes), null, err => {
+          err && this.emitter.emit('error', err instanceof Error ? err : new Error(err));
+        });
+        this.emitter.emit('nodeAdded', node);
+      } else {
+        this.options.debug('Rejecting node join request because it belongs to a different cluster:', node);
+        this.emitter.emit('nodeRejected', node);
+      }
     });
 
     this.socket.bind(this.options.listen, err => {
