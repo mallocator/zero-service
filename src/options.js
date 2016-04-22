@@ -104,12 +104,26 @@ exports.normalize = function(options) {
 };
 
 /**
- * helper function that check wether the host is something that zmq can understand.
+ * Helper function that check whether the host is something that zmq can understand.
+ * Reference to protocol definition: {@link http://api.zeromq.org/2-1:zmq-connect}
  * @param host
  * @returns {Array|{index: number, input: string}|*}
  */
 exports.isValidHost = function(host) {
-  return !!host.match(/^(tcp|ipc|inproc|pgm|epgm):\/\/[\w\d\._-]+:\d{1,5}/);
+  var protocol = host.substr(0, host.indexOf(':'));
+  switch (protocol) {
+    case 'tcp':
+      return !!host.match(/^tcp:\/\/([\d\w]+([\d\w\.]*[\d\w])*|\*):[1-6]?\d{1,4}$/);
+    case 'ipc':
+      return !!host.match(/^ipc:\/\/[^'"!#$%&+^<=>`]{1,256}$/);
+    case 'inproc':
+      return !!host.match(/^inproc:\/\/.{1,256}$/);
+    case 'pgm':
+    case 'epgm':
+      return !!host.match(/^tcp:\/\/[\d\w]+([\d\w\.]*[\d\w])*(;[\d\w]+([\d\w\.]*[\d\w])*)*:[1-6]?\d{1,4}$/);
+    default:
+      throw new Error('Unrecognized protocol in host' + host);
+  }
 };
 
 /**
