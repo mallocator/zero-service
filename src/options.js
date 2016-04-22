@@ -83,9 +83,26 @@ exports.defaultMulticast = {
  * The default options for when you choose AWS for discovery.
  * @typedef {object} AwsDiscovery
  * @extends Discovery
+ * @property {string} [region=us-west-1]  The amazon region your instances are in.
+ * @property {number} [maxRetries=3]      In case of error, how often should we retry
+ * @property {boolean} [sslEnabled=true]  Whether connection AWS should be secured or not
+ * @property {number} [maxResults=10]     The maximum number of instances that we will try to ping
+ * @property {number} [port=<listenPort>] The port on which we will attempt to connect with the cluster after discovery
+ * @property {object|object[]} [filters]  Either a single or multiple filters to choose which instances to ping.
+ *                                        For more information on filters check out
+ *                                        {@link http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/EC2.html#describeInstances-property}
+ * @property {object} [credentials]       Your AWS credentials. These are required if you're not on an instance with an IAM role
+ *                                        For more information check out {@link http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/node-configuring.html}
+ * @property {string} [credentials.accessKeyId]
+ * @property {string} [credentials.secretAccessKey]
+ *
  */
 exports.defaultAws = {
-
+  region: 'us-east-1',
+  maxRetries: 3,
+  sslEnabled: true,
+  maxResults: 10,
+  filters: []
 };
 
 /**
@@ -166,6 +183,7 @@ exports.cluster = function() {
  * Makes sure the discovery settings are valid.
  */
 exports.discovery = function() {
+  let options = this.options;
   let methodMap = {
     multicast: 'multicast',
     multi: 'multicast',
@@ -174,20 +192,20 @@ exports.discovery = function() {
     aws: 'aws',
     amazon: 'aws'
   };
-  if (!methodMap[this.options.discovery.type]) {
-    throw new Error('Unidentified discovery method: ' + this.options.discovery.type);
+  if (!methodMap[options.discovery.type]) {
+    throw new Error('Unidentified discovery method: ' + options.discovery.type);
   }
-  this.options.discovery.type = methodMap[this.options.discovery.type];
+  options.discovery.type = methodMap[options.discovery.type];
   switch(this.options.discovery.type) {
     case 'unicast':
       if(!this.options.discovery.hosts) {
         throw new Error('Unicast requires at least one host to connect to');
       }
-      if(!_.isArray(this.options.discovery.hosts)) {
-        this.options.discovery.hosts = [this.options.discovery.hosts];
+      if(!_.isArray(options.discovery.hosts)) {
+        this.options.discovery.hosts = [options.discovery.hosts];
       }
-      _.map(this.options.discovery.hosts, elem => elem.trim());
-      _.filter(this.options.discovery.hosts, elem => {
+      _.map(options.discovery.hosts, elem => elem.trim());
+      _.filter(options.discovery.hosts, elem => {
         if (elem.length === 0) {
           return false;
         }
@@ -196,26 +214,28 @@ exports.discovery = function() {
         }
         return true;
       });
-      if (!this.options.discovery.hosts.length) {
+      if (!options.discovery.hosts.length) {
         throw new Error('No valid hosts were found while in the configuration');
       }
       break;
 
     case 'multicast':
-      this.options.discovery = Object.assign({}, exports.defaultMulticast, this.options.discovery);
-      if (!_.isNumber(this.options.discovery.port) || this.options.discovery.port < 1 || this.options.discovery.port > 65535) {
+      this.options.discovery = Object.assign({}, exports.defaultMulticast, options.discovery);
+      if (!_.isNumber(options.discovery.port) || options.discovery.port < 1 || options.discovery.port > 65535) {
         throw new Error('The multicast port needs to be a valid number between 1 and 65535');
       }
-      if (!this.options.discovery.address.match(ipv4regex)) {
-        throw new Error('The given multicast host is not a valid ipv4');
+      if (!options.discovery.address.match(ipv4regex)) {
+        throw new Error('The given multicast host is not a valid ipv4:', options.discovery.address);
       }
-      if (!this.options.discovery.broadcast.match(ipv4regex)) {
-        throw new Error('The given broadcast address is not a valid ipv4');
+      if (!options.discovery.broadcast.match(ipv4regex)) {
+        throw new Error('The given broadcast address is not a valid ipv4:', options.discovery.broadcast);
       }
       break;
 
     case 'aws':
-      this.options.discovery = Object.assign({}, exports.defaultAws, this.options.discovery);
+      options.discovery = Object.assign({}, exports.defaultAws, options.discovery);
+      options.discovery.filters = _.isArray(options.discovery.filters) ? options.discovery.filters : [options.discovery.filters];
+      options.discovery.port = options.discovery.port || options.listen.substr(options.listen.lastIndexOf(':') + 1);
       break;
   }
 };

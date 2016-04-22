@@ -22,18 +22,19 @@
     "node": ">=5.0"
   },
   "scripts": {
-    "test": "istanbul cover _mocha",
-    "test-travis": "istanbul cover _mocha --report lcovonly -- -R spec"
+    "test": "istanbul cover _mocha -- --recursive",
+    "test-travis": "istanbul cover _mocha --report lcovonly -- -R spec --recursive"
   },
   "devDependencies": {
     "chai": "^3.5.0",
     "coveralls": "^2.11.9",
-    "gently": "^0.10.0",
     "istanbul": "^0.4.3",
     "mocha": "^2.4.5",
-    "mocha-lcov-reporter": "^1.2.0"
+    "mocha-lcov-reporter": "^1.2.0",
+    "sinon": "^1.17.3"
   },
   "dependencies": {
+    "aws-sdk": "^2.3.5",
     "eventemitter2": "^1.0.0",
     "lodash": "^4.11.1",
     "onall": "^1.0.1",

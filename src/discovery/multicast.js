@@ -38,37 +38,31 @@ exports.discover = function(options, emitter) {
   exports.emitter = emitter;
   emitter.on('connected', exports.stop);
   emitter.on('disconnected', exports.start);
-  exports.start(options);
+  if (!exports.socket) {
+    exports.socket = dgram.createSocket("udp4");
+    exports.socket.on('message', msg => {
+      msg = msg.toString('utf8');
+      if (msg != exports.options.listen) {
+        exports.emitter.emit('discovered', msg);
+      }
+    });
+    exports.socket.bind(exports.options.discovery.port, exports.options.discovery.address, exports.start);
+  } else {
+    exports.start();
+  }
 };
 
-/**
- * @param {Options} [options] Optional options object that allows to override the cached version.
- */
-exports.start = function(options) {
-  options = options || exports.options;
-  var socket = exports.socket = dgram.createSocket("udp4");
-
-  socket.on('listening', () => {
-    options.debug('Listening for other nodes using multicast on port', options.discovery.port);
-  });
-  socket.on('message', msg => {
-    msg = msg.toString('utf8');
-    if (msg != options.listen) {
-      exports.emitter.emit('discovered', msg);
-    }
-  });
-  socket.bind(options.discovery.port, options.discovery.address, () => {
-    socket.setBroadcast(true);
-    exports.interval = setInterval(() => {
-      var message = new Buffer(options.listen, 'utf8');
-      var port = options.discovery.sendPort || options.discovery.port;
-      socket.send(message, 0, message.length, port, options.discovery.broadcast, err => {
-        if (err) {
-          throw new Error(err);
-        }
-      });
-    }, options.discovery.interval);
-  });
+exports.start = function() {
+  exports.socket.setBroadcast(true);
+  var message = new Buffer(exports.options.listen, 'utf8');
+  var port = exports.options.discovery.sendPort || exports.options.discovery.port;
+  exports.interval = setInterval(() => {
+    exports.socket.send(message, 0, message.length, port, exports.options.discovery.broadcast, err => {
+      if (err) {
+        throw new Error(err);
+      }
+    });
+  }, exports.options.discovery.interval);
 };
 
 /**
@@ -81,7 +75,6 @@ exports.stop = function() {
     exports.emitter.removeListener('disconnected', exports.start);
   }
   if (exports.socket) {
-    exports.socket.close();
-    delete exports.socket;
+    exports.socket.setBroadcast(false);
   }
 };
