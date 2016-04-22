@@ -120,7 +120,7 @@ exports.isValidHost = function(host) {
       return !!host.match(/^inproc:\/\/.{1,256}$/);
     case 'pgm':
     case 'epgm':
-      return !!host.match(/^tcp:\/\/[\d\w]+([\d\w\.]*[\d\w])*(;[\d\w]+([\d\w\.]*[\d\w])*)*:[1-6]?\d{1,4}$/);
+      return !!host.match(/^e?pgm:\/\/[\d\w]+([\d\w\.]*[\d\w])*(;[\d\w]+([\d\w\.]*[\d\w])*)*:[1-6]?\d{1,4}$/);
     default:
       throw new Error('Unrecognized protocol in host' + host);
   }
