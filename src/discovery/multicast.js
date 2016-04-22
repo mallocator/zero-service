@@ -40,11 +40,18 @@ exports.discover = function(options, emitter) {
   emitter.on('disconnected', exports.start);
   if (!exports.socket) {
     exports.socket = dgram.createSocket("udp4");
-    exports.socket.on('message', msg => {
+    exports.socket.on('message', (msg, remote) => {
       msg = msg.toString('utf8');
       if (msg != exports.options.listen) {
         exports.emitter.emit('discovered', msg);
       }
+      var message = new Buffer(exports.options.listen, 'utf8');
+      exports.socket.setBroadcast(false);
+      exports.socket.send(message, 0, message.length, remote.port, remote.address, err => {
+        if (err) {
+          throw new Error(err);
+        }
+      });
     });
     exports.socket.bind(exports.options.discovery.port, exports.options.discovery.address, exports.start);
   } else {
@@ -53,10 +60,10 @@ exports.discover = function(options, emitter) {
 };
 
 exports.start = function() {
-  exports.socket.setBroadcast(true);
   var message = new Buffer(exports.options.listen, 'utf8');
   var port = exports.options.discovery.sendPort || exports.options.discovery.port;
   exports.interval = setInterval(() => {
+    exports.socket.setBroadcast(true);
     exports.socket.send(message, 0, message.length, port, exports.options.discovery.broadcast, err => {
       if (err) {
         throw new Error(err);
@@ -66,15 +73,11 @@ exports.start = function() {
 };
 
 /**
- * Stops the broadcast listener and sender as well close the udp socket.
+ * Stops the broadcast sender, but the listener will still run.
  */
 exports.stop = function() {
-  exports.interval && clearInterval(exports.interval);
-  if (exports.emitter) {
-    exports.emitter.removeListener('connected', exports.stop);
-    exports.emitter.removeListener('disconnected', exports.start);
-  }
-  if (exports.socket) {
-    exports.socket.setBroadcast(false);
-  }
+  clearInterval(exports.interval);
+  exports.socket.setBroadcast(false);
+  exports.emitter.removeListener('connected', exports.stop);
+  exports.emitter.removeListener('disconnected', exports.start);
 };
