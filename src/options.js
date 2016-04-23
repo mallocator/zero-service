@@ -106,6 +106,18 @@ exports.defaultAws = {
 };
 
 /**
+ * The default options for local discovery based on a file used as exchange.
+ * @typedef {object} LocalDiscovery
+ * @extends Discovery
+ * @property {string} [file=/tmp/zero.service]  The file used to exchange host information
+ * @property {number} [interval=1000]           The interval with which we check the file for changes
+ */
+exports.defaultLocal = {
+  file: '/tmp/zero.service',
+  interval: 1000
+};
+
+/**
  * Sets default options and verifies that all values are in the right format.
  * @param options
  * @returns {*|{}}
@@ -192,17 +204,14 @@ exports.discovery = function() {
     aws: 'aws',
     amazon: 'aws'
   };
-  if (!methodMap[options.discovery.type]) {
-    throw new Error('Unidentified discovery method: ' + options.discovery.type);
-  }
   options.discovery.type = methodMap[options.discovery.type];
-  switch(this.options.discovery.type) {
+  switch(options.discovery.type) {
     case 'unicast':
-      if(!this.options.discovery.hosts) {
+      if(!options.discovery.hosts) {
         throw new Error('Unicast requires at least one host to connect to');
       }
       if(!_.isArray(options.discovery.hosts)) {
-        this.options.discovery.hosts = [options.discovery.hosts];
+        options.discovery.hosts = [options.discovery.hosts];
       }
       _.map(options.discovery.hosts, elem => elem.trim());
       _.filter(options.discovery.hosts, elem => {
@@ -237,6 +246,17 @@ exports.discovery = function() {
       options.discovery.filters = _.isArray(options.discovery.filters) ? options.discovery.filters : [options.discovery.filters];
       options.discovery.port = options.discovery.port || options.listen.substr(options.listen.lastIndexOf(':') + 1);
       break;
+
+    case 'local':
+      options.discovery = Object.assign({}, exports.defaultLocal, options.discovery);
+      options.discovery.file = path.normalize(options.discovery.file);
+      if (!_.isInteger(options.discovery.interval) || options.discovery.interval <= 0) {
+        throw new Error('The interval for local discovery has to be a positive integer:', options.discovery.interval);
+      }
+      break;
+
+    default:
+      throw new Error('Unidentified discovery method: ' + options.discovery.type);
   }
 };
 
