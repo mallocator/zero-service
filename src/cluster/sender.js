@@ -46,17 +46,17 @@ class Sender {
     nodes = _.isArray(nodes) ? nodes : [nodes];
     // TODO try to connect to multiple nodes until one is successful
     let node = nodes[0];
-    this.socket.connect(node.host);
-    this.options.debug('Handshake sender has connected to ' + node.host);
+    this.socket.connect(node);
+    this.options.debug('Handshake sender has connected to ' + node);
 
     this.socket.on('message', msg => {
-      this.options.debug('Handshake sender received node list from ' + node.host);
-      this.socket.disconnect(node.host);
+      this.options.debug('Handshake sender received node list from ' + node);
+      this.socket.disconnect(node);
       this.emitter.emit('clusterFound', JSON.parse(msg.toString('utf8')));
     });
 
     this.socket.send(JSON.stringify(this.ownHost), null, err => {
-      this.options.debug('Handshake sender sent node list request to ' + node.host);
+      this.options.debug('Handshake sender sent node list request to ' + node);
       err && this.emitter.emit('error', err instanceof Error ? err : new Error(err));
     });
   }

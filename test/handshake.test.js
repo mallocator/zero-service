@@ -61,9 +61,7 @@ describe('handshake', () => {
       }
     });
 
-    senderEmitter.emit('discovered', [
-      {host: 'tcp://127.0.0.1:11111'}
-    ]);
+    senderEmitter.emit('discovered', [ 'tcp://127.0.0.1:11111']);
   });
 
   it('should perform a successful handshake with a node that is already part of a cluster', done => {
@@ -125,9 +123,7 @@ describe('handshake', () => {
       }
     });
 
-    senderEmitter.emit('discovered', [
-      {host: 'tcp://127.0.0.1:11111'}
-    ]);
+    senderEmitter.emit('discovered', 'tcp://127.0.0.1:11111');
   });
 
   it ('should reject a join request from another node when it belongs to a different cluster', done => {
@@ -169,8 +165,6 @@ describe('handshake', () => {
       done();
     });
 
-    senderEmitter.emit('discovered', [
-      {host: 'tcp://127.0.0.1:11111'}
-    ]);
+    senderEmitter.emit('discovered', 'tcp://127.0.0.1:11111');
   });
 });

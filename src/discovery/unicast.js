@@ -6,9 +6,5 @@
  * @param {EventEmitter} emitter
  */
 exports.discover = function(options, emitter) {
-  var nodes = [];
-  for (let host of options.discovery.hosts) {
-    nodes.push({ host });
-  }
-  emitter.emit('discovered', nodes);
+  emitter.emit('discovered', options.discovery.hosts);
 };

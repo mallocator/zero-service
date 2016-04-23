@@ -251,7 +251,7 @@ exports.discovery = function() {
       options.discovery = Object.assign({}, exports.defaultLocal, options.discovery);
       options.discovery.file = path.normalize(options.discovery.file);
       if (!_.isInteger(options.discovery.interval) || options.discovery.interval <= 0) {
-        throw new Error('The interval for local discovery has to be a positive integer:', options.discovery.interval);
+        throw new Error('The interval for local discovery has to be a positive integer:', options.discovery);
       }
       break;
 

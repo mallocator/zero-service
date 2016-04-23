@@ -12,8 +12,8 @@ describe('discovery.unicast', () => {
 
     emitter.on('discovered', nodes => {
       expect(nodes.length).to.equal(2);
-      expect(nodes[0]).to.deep.equal({ host: 'tcp//:1.0.0.0:1' });
-      expect(nodes[1]).to.deep.equal({ host: 'tcp//:1.0.0.0:2' });
+      expect(nodes[0]).to.deep.equal('tcp//:1.0.0.0:1');
+      expect(nodes[1]).to.deep.equal('tcp//:1.0.0.0:2');
       done();
     });
 
