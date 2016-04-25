@@ -120,6 +120,7 @@ class ZeroService extends events {
    * @param {String} [options.address]  Set your own custom address with which zeromq can talk to this service
    * @param {String} [options.id]       Set your own id, otherwise the library will generate one for you
    * @returns {ZeroService}
+   * TODO this might be just internal and called automatically when you use any of the zmq methods
    */
   addService(type, options) {
     type = _.isArray(type) ? type : [ type ];
@@ -140,6 +141,7 @@ class ZeroService extends events {
    * @fires serviceRemoved
    * @param {string|string[]} type   The type of the service you want to remove from the cluster.
    * @returns {ZeroService}
+   * TODO this might be just internal and called automatically when you use any of the zmq methods
    */
   removeService(type) {
     type = _.isArray(type) ? type : [ type ];
@@ -149,75 +151,54 @@ class ZeroService extends events {
     return this;
   }
 
-  // TODO check the zeromq docs for the exact api that we're trying to replicate here
   /**
    * Send a message to one node of the given service type and wait for an answer.
    * @param type
-   * @param payload
-   * @param cb
-     */
-  req(type, payload, cb) {
+   * @returns {Req}
+   */
+  req(type) {
 
   }
 
-  // TODO check the zeromq docs for the exact api that we're trying to replicate here
   /**
    * Receive a message from from a node that expects an answer.
    * @param type
-   * @param callback
-     */
-  res(type, callback) {
+   * @returns {Rep}
+   */
+  rep(type) {
 
   }
 
-  // TODO check the zeromq docs for the exact api that we're trying to replicate here
   /**
    * Send a message to one node of the given service type without expecting an answer.
    * @param type
-   * @param payload
-     */
-  push(type, payload) {
-    // TODO if the type doesn't exist, register it.
-    // TODO send a request to one of the servers of this type
+   * @returns {Push}
+   */
+  push(type) {
   }
 
-  // TODO check the zeromq docs for the exact api that we're trying to replicate here
   /**
    * Receive a message without having to reply to it.
    * @param type
-   * @param callback
-     */
-  pull(type, callback) {
-    // TODO if the type doesn't exist, register it.
-    // TODO register a replier who will answer when a request of this type has been received.
+   * @returns {Pull}
+   */
+  pull(type) {
   }
 
   /**
    * Publish a message to all nodes of the given service type without waiting for any acknowledgements.
    * @param type
-   * @param payload
-     */
-  pub(type, payload) {
-    // TODO if the type doesn't exist, register it.
-    // TODO send the payload to all known nodes with this service
+   * @returns {Pub}
+   */
+  pub(type) {
   }
 
   /**
    * Listen to messages of a given type without having to acknowledge the reception (The publisher doesn't care).
    * @param type
-   * @param callback  Called when a message has been received
-     */
-  sub(type, callback) {
-    // TODO if the type doesn't exist, register it.
-    // TODO receive payload from any node
-  }
-
-  /**
-   * Pair with one other node of the given type that has not been paired with any other so far.
-   * @param type
-   * @param callback  Called when a connection has been established
-     */
-  pair(type, callback) {
+   * @returns {Req}
+   */
+  sub(type) {
   }
 
   /**
