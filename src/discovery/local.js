@@ -72,15 +72,12 @@ exports.watcher = function(curr, prev) {
     return this.emitter.emit(new Error('Local discovery can\'t find file to watch for:', exports.options.discovery.file));
   }
   if (curr.mtime != prev.mtime) {
-    console.log(6)
     fs.readFile(exports.options.discovery.file, 'utf8', (err, data) => {
       if (err) {
         return exports.emitter.emit('error');
       }
       var nodes = data.split(/\s/);
-      console.log(nodes);
       nodes = _.filter(_.difference(nodes, exports.knownHosts), entry => entry.trim().length);
-      console.log(nodes);
       if (nodes.length) {
         exports.knownHosts.concat(nodes);
         exports.emitter.emit('discovered', nodes);
