@@ -8,7 +8,15 @@ var events = require('eventemitter2');
 var On = require('onall');
 
 var Cluster = require('./src/cluster');
+var Dealer = require('./src/methods/dealer');
 var opts = require('./src/options');
+var Pub = require('./src/methods/pub');
+var Pull = require('./src/methods/pull');
+var Push = require('./src/methods/push');
+var Rep = require('./src/methods/rep');
+var Req = require('./src/methods/req');
+var Router = require('./src/methods/router');
+var Sub = require('./src/methods/sub');
 
 /**
  * A node holds all information about one instance of ZeroService with all the services that are registered to that
@@ -113,51 +121,12 @@ class ZeroService extends events {
   }
 
   /**
-   * Adds a new service to the cluster and makes it available to all the nodes.
-   * @fires serviceAdded
-   * @param {string|string[]} type      The type of service you want to register (any name you seem fit)
-   * @param {Object} [options]          Optional options that otherwise will be auto generated
-   * @param {String} [options.address]  Set your own custom address with which zeromq can talk to this service
-   * @param {String} [options.id]       Set your own id, otherwise the library will generate one for you
-   * @returns {ZeroService}
-   * TODO this might be just internal and called automatically when you use any of the zmq methods
-   */
-  addService(type, options) {
-    type = _.isArray(type) ? type : [ type ];
-    for (let id of _.uniq(type)) {
-      var port = options && options.port ? options.port : 2207;
-      var service = {
-        id,
-        port,
-        node: this.options.id
-      };
-      this.cluster.addService(service);
-    }
-    return this;
-  }
-
-  /**
-   * Removes a node from the cluster.
-   * @fires serviceRemoved
-   * @param {string|string[]} type   The type of the service you want to remove from the cluster.
-   * @returns {ZeroService}
-   * TODO this might be just internal and called automatically when you use any of the zmq methods
-   */
-  removeService(type) {
-    type = _.isArray(type) ? type : [ type ];
-    for (let id of _.uniq(type)) {
-      this.cluster.removeService(id);
-    }
-    return this;
-  }
-
-  /**
    * Send a message to one node of the given service type and wait for an answer.
    * @param type
    * @returns {Req}
    */
   req(type) {
-
+    return new Req(this, {id: type}, this.cluster.nodes);
   }
 
   /**
@@ -165,8 +134,10 @@ class ZeroService extends events {
    * @param type
    * @returns {Rep}
    */
-  rep(type) {
-
+  rep(type, port) {
+    // TODO register new service in cluster based on type and port
+    // TODO get own address to subscribe to
+    return new Rep(address);
   }
 
   /**
@@ -174,7 +145,9 @@ class ZeroService extends events {
    * @param type
    * @returns {Push}
    */
-  push(type) {
+  push(type, port) {
+    // TODO would be better if this "service" was a reference to our own service instance
+    return new Push(address);
   }
 
   /**
@@ -183,22 +156,30 @@ class ZeroService extends events {
    * @returns {Pull}
    */
   pull(type) {
+    // TODO would be better if this "service" was a reference to our own service instance
+    return new Pull(this, {id: type}, this.cluster.nodes);
   }
 
   /**
    * Publish a message to all nodes of the given service type without waiting for any acknowledgements.
    * @param type
+   * @param {number} [port] The port on which to create this service. If none is given, one will be assigned automatically.
    * @returns {Pub}
    */
-  pub(type) {
+  pub(type, port) {
+    // TODO register new service in cluster based on type and port
+    // TODO get own address to subscribe to
+    return new Pub(address);
   }
 
   /**
    * Listen to messages of a given type without having to acknowledge the reception (The publisher doesn't care).
    * @param type
-   * @returns {Req}
+   * @returns {Sub}
    */
   sub(type) {
+    // TODO would be better if this "service" was a reference to our own service instance
+    return new Sub(this, {id: type}, this.cluster.nodes);
   }
 
   /**
@@ -208,6 +189,8 @@ class ZeroService extends events {
    * @param callback  Called whenever a message is acknowledged
    */
   dealer(type, callback) {
+    // TODO pass in arguments when implemented
+    return new Dealer();
   }
 
   /**
@@ -217,6 +200,51 @@ class ZeroService extends events {
    * @param callback  Called whenever a message has been received
    */
   router(type, callback) {
+    // TODO pass in arguments when implemented
+    return new Router();
+  }
+
+  /**
+   * Adds a new service to the cluster and makes it available to all the nodes.
+   * @fires serviceAdded
+   * @param {string|string[]} type      The type of service you want to register (any name you seem fit)
+   * @param {Object} [options]          Optional options that otherwise will be auto generated
+   * @param {String} [options.address]  Set your own custom address with which zeromq can talk to this service
+   * @param {String} [options.id]       Set your own id, otherwise the library will generate one for you
+   * @returns {ZeroService|ZeroService[]}
+   */
+  _addService(type, options) {
+    // TODO Maybe even move this into a parent class for req/push/pub
+    // TODO this should be done implicitly when a rep/push/pub service is created.
+    type = _.isArray(type) ? type : [type];
+    var services = [];
+    for (let id of _.uniq(type)) {
+      var port = options && options.port ? options.port : 2207;
+      var service = {
+        id,
+        port,
+        node: this.options.id
+      };
+      services.push(service);
+      this.cluster.addService(service);
+    }
+    return services.length <= 1 ? services[0] : services;
+  }
+
+  /**
+   * Removes a service from the cluster.
+   * @fires serviceRemoved
+   * @param {string|string[]} type   The type of the service you want to remove from the cluster.
+   * @returns {ZeroService}
+   */
+  _removeService(type) {
+    // TODO Maybe even move this into a parent class for req/push/pub
+    // TODO this should be done implicitly when a rep/push/pub service is stopped.
+    type = _.isArray(type) ? type : [type];
+    for (let id of _.uniq(type)) {
+      this.cluster.removeService(id);
+    }
+    return this;
   }
 
   /**

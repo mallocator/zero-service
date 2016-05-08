@@ -20,6 +20,7 @@ class Cluster {
         services: {}
       }
     };
+    this.services = {};
     this.emitter.on('nodeAdded', this._onNodeAdded.bind(this));
     this.emitter.on('nodeRemoved', this._onNodeRemoved.bind(this));
     this.emitter.on('serviceAdded', this._onServiceAdded.bind(this));

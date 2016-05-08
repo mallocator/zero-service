@@ -1,23 +1,11 @@
 'use strict';
 
-var events = require('eventemitter2');
-var zmq = require('zmq');
+var Sender = require('./sender');
 
 
-class Pub extends events {
+class Pub extends Sender {
   constructor(address) {
-    super();
-    this.socket = zmq.socket('pub');
-    this.socket.bind(address, err => {
-      if (err) {
-        return this.emit('error', new Error(err));
-      }
-      this.emit('bound');
-    });
-  }
-
-  send(msg, flags, cb) {
-    this.socket.send(msg, flags, cb);
+    super('pub', address);
   }
 }
 

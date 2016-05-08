@@ -1,21 +1,22 @@
 'use strict';
 
-var events = require('eventemitter2');
-var zmq = require('zmq');
+var Sender = require('./sender');
 
 
-class Rep extends events {
-  constructor(address) {
-    super();
-    this.socket = zmq.socket('rep');
-    this.socket.bind(address, err => {
-      if (err) {
-        return this.emit('error', new Error(err));
-      }
+class Rep extends Sender {
+  /**
+   *
+   * @param address
+   * @param {function} [callback] An optional callback that can be set to react to incoming messages as an alternative
+   *                              to listening to message events.
+   */
+  constructor(address, callback) {
+    super('rep', address);
+    this.once('bound', () => {
       this.socket.on('message', msg => {
-        this.emit('message', msg, this.socket);
+        callback && callback(msg, this);
+        this.emit('message', msg, this);
       });
-      this.emit('bound');
     });
   }
 }
