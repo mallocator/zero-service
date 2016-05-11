@@ -8,8 +8,7 @@ node_js:
   - "5.0"
 
 env:
-- ZMQ="git://github.com/zeromq/zeromq4-1.git -b v4.1.4"
-- SODIUM="git://github.com/jedisct1/libsodium.git -b 1.0.5"
+- ZMQ="git://github.com/zeromq/zeromq4-1.git -b v4.1.4 SODIUM="git://github.com/jedisct1/libsodium.git -b 1.0.5"
 
 before_install:
 - sudo apt-get -y install uuid-dev
