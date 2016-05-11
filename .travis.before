@@ -13,6 +13,10 @@ if [ ! -d libsodium ]; then
   make
   sudo make install
   cd ..
+else
+  cd libsodium
+  sudo make install
+  cd ..
 fi
 
 if [ ! -d zmqlib ]; then
@@ -24,4 +28,11 @@ if [ ! -d zmqlib ]; then
   sudo make install
   sudo /sbin/ldconfig
   cd ..
+else
+  cd zmqlib
+  sudo make install
+  sudo /sbin/ldconfig
+  cd ..
 fi
+
+sudo touch /etc/ld.so.conf
