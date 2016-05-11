@@ -8,17 +8,20 @@ node_js:
   - "5.0"
 
 env:
-- ZMQ="git://github.com/zeromq/zeromq4-1.git -b v4.1.4" SODIUM="git://github.com/jedisct1/libsodium.git -b 1.0.5"
+- ZMQ="git://github.com/zeromq/zeromq4-1.git -b v4.1.4"
+- SODIUM="git://github.com/jedisct1/libsodium.git -b 1.0.5"
 
 before_install:
 - sudo apt-get -y install uuid-dev
-- '[ -z "$SODIUM" ] || git clone --depth 1 $SODIUM libsodium'
-- '[ -z "$SODIUM" ] || cd libsodium'
-- '[ -z "$SODIUM" ] || ./autogen.sh'
-- '[ -z "$SODIUM" ] || ./configure'
-- '[ -z "$SODIUM" ] || make'
-- '[ -z "$SODIUM" ] || sudo make install'
-- '[ -z "$SODIUM" ] || cd ..'
+- '[ -d libsodium ] && rm -rf libsodium'
+- git clone --depth 1 $SODIUM libsodium
+- cd libsodium
+- ./autogen.sh
+- ./configure
+- make
+- sudo make install
+- cd ..
+- '[ -d zmqlib ] && rm -rf zmqlib'
 - git clone --depth 1 $ZMQ zmqlib
 - cd zmqlib
 - ./autogen.sh
