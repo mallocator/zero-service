@@ -10,12 +10,12 @@ node_js:
 before_install:
 - ./.travis.before
 
+install: npm update
+
 cache:
   apt: true
   directories:
     - node_modules
-    - zmqlib
-    - libsodium
 
 script: "npm run test-travis"
 after_script: "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js || true"

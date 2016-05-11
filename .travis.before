@@ -5,9 +5,7 @@ SODIUM="git://github.com/jedisct1/libsodium.git -b 1.0.5"
 
 sudo apt-get -y install uuid-dev
 
-if [ ! -d libsodium ]; then
-  git clone --depth 1 $SODIUM libsodium
-fi
+git clone --depth 1 $SODIUM libsodium
 cd libsodium
 ./autogen.sh
 ./configure
@@ -15,9 +13,7 @@ make
 sudo make install
 cd ..
 
-if [ ! -d zmqlib ]; then
-  git clone --depth 1 $ZMQ zmqlib
-fi
+git clone --depth 1 $ZMQ zmqlib
 cd zmqlib
 ./autogen.sh
 ./configure
