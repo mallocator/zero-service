@@ -28,4 +28,4 @@ class Sender extends events {
   }
 }
 
-module.exports = Push;
+module.exports = Sender;
