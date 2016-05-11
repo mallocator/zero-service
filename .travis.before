@@ -7,32 +7,23 @@ sudo apt-get -y install uuid-dev
 
 if [ ! -d libsodium ]; then
   git clone --depth 1 $SODIUM libsodium
-  cd libsodium
-  ./autogen.sh
-  ./configure
-  make
-  sudo make install
-  cd ..
-else
-  cd libsodium
-  sudo make install
-  cd ..
 fi
+cd libsodium
+./autogen.sh
+./configure
+make
+sudo make install
+cd ..
 
 if [ ! -d zmqlib ]; then
   git clone --depth 1 $ZMQ zmqlib
-  cd zmqlib
-  ./autogen.sh
-  ./configure
-  make
-  sudo make install
-  sudo /sbin/ldconfig
-  cd ..
-else
-  cd zmqlib
-  sudo make install
-  sudo /sbin/ldconfig
-  cd ..
 fi
+cd zmqlib
+./autogen.sh
+./configure
+make
+sudo make install
+sudo /sbin/ldconfig
+cd ..
 
 sudo touch /etc/ld.so.conf
