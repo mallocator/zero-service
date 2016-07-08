@@ -62,7 +62,7 @@ class ZeroService extends events {
    */
 
   /**
-   * @event ZeroService#nodeAdded  Fired when a node is added either from the network or locally
+   * @event nodeAdded  Fired when a node is added either from the network or locally
    * @type {Object}
    * @property {string} id  The id of the new node
    * @property {string} address The address of the new node

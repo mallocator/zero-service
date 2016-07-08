@@ -33,13 +33,19 @@ class Receiver {
   _onNodesAdded(nodes) {
     nodes = _.isArray(nodes) ? nodes : [ nodes ];
     for (let node of nodes) {
-      if (this.knownNodes[node.id]) {
+      if (this.knownNodes[node.host]) {
         this.options.debug('Receiver is ignoring host because this node already knows it', node.host);
       } else if(Object.keys(this.knownNodes).length > this.options.nodes.maxPeers) {
         this.options.debug('Receiver is ignoring host because maxPeers(', this.options.nodes.maxPeers, ') was reached: ', node.host);
       } else {
-        // TODO monitor the socket so that if a node disconnects we can notify the rest of the cluster that it's gone
-        this.knownNodes[node.id] = node;
+        this.knownNodes[node.host] = node;
+        // TODO monitor if a node disconnects so we can notify the rest of the cluster that it's gone (but they would recover on their own)
+        this.socket.on('disconnect', (fd, endpoint) => {
+          if (this.knownNodes[endpoint]) {
+            this.emitter.emit('nodeRemoved', this.knownNodes[endpoint].id, endpoint, this.knownNodes[endpoint].services);
+          }
+        });
+        this.socket.monitor();
         this.socket.connect(node.host);
         this.options.debug('Receiver connected to host', node.host);
         this.socket.subscribe('nodeAdded');
@@ -68,7 +74,7 @@ class Receiver {
      */
   _onNodeRemoved(node) {
     this.socket.disconnect(node.host);
-    delete this.knownNodes[node.id];
+    delete this.knownNodes[node.host];
     if(!this.knownNodes.length) {
       this.emitter.emit('disconnected');
     }
