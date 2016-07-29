@@ -68,7 +68,7 @@ exports.start = function() {
  * @fires discovered
  */
 exports.watcher = function(curr, prev) {
-  if (curr.mtime == 0) {
+  if (curr.mtime === 0) {
     return this.emitter.emit(new Error('Local discovery can\'t find file to watch for:', exports.options.discovery.file));
   }
   if (curr.mtime != prev.mtime) {

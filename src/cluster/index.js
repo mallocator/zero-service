@@ -6,7 +6,13 @@ var Receiver = require('./receiver');
 var Broadcaster = require('./broadcaster');
 
 class Cluster {
-  constructor(options, emitter) {
+  /**
+   *
+   * @param {Options} options
+   * @param {EventEmitter} emitter
+   * @param {Node} selfNode
+   */
+  constructor(options, emitter, selfNode) {
     this.options = options;
     this.emitter = emitter;
     this.listener = new Listener(options, emitter);
@@ -14,11 +20,7 @@ class Cluster {
     this.receiver = new Receiver(options, emitter);
     this.broadcaster = new Broadcaster(options, emitter);
     this.nodes = {
-      [this.options.id] : {
-        id: this.options.id,
-        host: this.options.listen,
-        services: {}
-      }
+      [this.options.id] : selfNode
     };
     this.services = {};
     this.emitter.on('nodeAdded', this._onNodeAdded.bind(this));
@@ -33,7 +35,7 @@ class Cluster {
 
   /**
    *
-   * @param service
+   * @param {Service} service
    */
   addService(service) {
     this.emitter.emit('serviceAdded', service);

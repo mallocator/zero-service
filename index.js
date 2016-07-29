@@ -4,11 +4,11 @@ var fs = require('fs');
 var path = require('path');
 
 var _ = require('lodash');
-var events = require('eventemitter2');
-var On = require('onall');
+var EventEmitter = require('eventemitter2');
 
 var Cluster = require('./src/cluster');
 var Dealer = require('./src/methods/dealer');
+var Node = require('./src/node');
 var opts = require('./src/options');
 var Pub = require('./src/methods/pub');
 var Pull = require('./src/methods/pull');
@@ -16,30 +16,15 @@ var Push = require('./src/methods/push');
 var Rep = require('./src/methods/rep');
 var Req = require('./src/methods/req');
 var Router = require('./src/methods/router');
+var Service = require('./src/service');
 var Sub = require('./src/methods/sub');
 
 /**
- * A node holds all information about one instance of ZeroService with all the services that are registered to that
- * instance.
- * @typedef {object} Node
- * @property {string} id          A unique id to identify this node
- * @property {string} host        A host address that is usable by zeromq
- * @property {Service[]} services A list of services that are available on this node
- */
-
-/**
- * Holds the information for a service that is made available on a node. A service always needs to have an existing
- * node.
- * @typedef {object} Service
- * @property {string} id    A unique id to identify this service
- * @property {string} node  The node id to which this service belongs
- * @property {number} port  The port on which we can connect to this service on other nodes
- */
-
-/**
  * This class bundles the API which allows a user to connect to a cluster and announce services.
+ * @property {Options} options
+ * @property {Cluster} cluster
  */
-class ZeroService extends events {
+class ZeroService extends EventEmitter {
   /**
    * @event connected Fired when we successfully connected to the cluster. Is fired when both listening and discovered
    * have been fired.
@@ -96,9 +81,9 @@ class ZeroService extends events {
       newListener: false
     });
     this.options = opts.normalize(options);
-    this.cluster = new Cluster(this.options, this);
-    this.on = new On(this);
-    this.methods = [];
+    this.node = new Node(this.options.id, this.options.listen);
+    this.cluster = new Cluster(this.options, this, this.node);
+    this.services = {};
   }
 
   /**
@@ -125,19 +110,27 @@ class ZeroService extends events {
    * @param type
    * @returns {Req}
    */
-  req(type) {
-    return new Req(this, {id: type}, this.cluster.nodes);
+  req(type, port = 2207) {
+    return new Req(this, new Service(type, this.node, port), this.cluster.nodes);
   }
 
   /**
    * Receive a message from from a node that expects an answer.
-   * @param type
+   * @param type            The type of service that we want to respond on.
+   * @param {number} [port=2207]  The port on which this service will operate
    * @returns {Rep}
    */
-  rep(type, port) {
-    // TODO register new service in cluster based on type and port
-    // TODO get own address to subscribe to
-    return new Rep(address);
+  rep(type, port = 2207) {
+    var key = type + ':' + port;
+    if (!this.services[key]) {
+      // TODO figure out the right port
+      this.services[key] = new Rep(this, new Service(type, this.node, port));
+    } else {
+      if (!(this.services[key] instanceof Rep || this.services[key] instanceof Req)) {
+        throw new Error('The given type has already been registered as type ' + typeof this.services[key]);
+      }
+    }
+    return this.services[key];
   }
 
   /**
@@ -217,10 +210,10 @@ class ZeroService extends events {
     // TODO Maybe even move this into a parent class for req/push/pub
     // TODO this should be done implicitly when a rep/push/pub service is created.
     type = _.isArray(type) ? type : [type];
-    var services = [];
+    let services = [];
     for (let id of _.uniq(type)) {
-      var port = options && options.port ? options.port : 2207;
-      var service = {
+      let port = options && options.port ? options.port : 2207;
+      let service = {
         id,
         port,
         node: this.options.id
@@ -248,16 +241,17 @@ class ZeroService extends events {
   }
 
   /**
+   * Performs the discovery based on
    * @fires discovered
    * @private
    */
   _discover() {
-    var files = fs.readdirSync(path.join(__dirname, '/src', '/discovery'));
+    let files = fs.readdirSync(path.join(__dirname, '/src', '/discovery'));
     for (let file of files) {
       let fileType = path.basename(file, path.extname(file));
       if (fileType == this.options.discovery.type) {
-        this.methods[this.options.discovery.type] = require(path.join(__dirname, '/src', '/discovery', file));
-        this.methods[this.options.discovery.type].discover(this.options, this);
+        let discovery = require(path.join(__dirname, '/src', '/discovery', file));
+        return discovery.discover(this.options, this);
       }
     }
     throw new Error('Unable to find discovery method of type ' + this.options.discovery.type);

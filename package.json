@@ -1,6 +1,6 @@
 {
   "name": "zero-service",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A peer-2-peer serverless service discovery built on top of zeromq",
   "main": "index.js",
   "homepage": "http://github.com/mallocator/gulp-international",

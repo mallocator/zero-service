@@ -5,19 +5,20 @@ var Sender = require('./sender');
 
 class Rep extends Sender {
   /**
-   *
-   * @param address
-   * @param {function} [callback] An optional callback that can be set to react to incoming messages as an alternative
-   *                              to listening to message events.
+   * @param {EventEmitter} emitter
+   * @param {Service} service
    */
-  constructor(address, callback) {
-    super('rep', address);
+  constructor(emitter, service) {
+    super('rep', emitter, service, []);
     this.once('bound', () => {
       this.socket.on('message', msg => {
-        callback && callback(msg, this);
         this.emit('message', msg, this);
       });
     });
+  }
+
+  send(msg, flags, cb) {
+    this.socket.send(msg, flags, cb);
   }
 }
 

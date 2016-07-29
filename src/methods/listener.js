@@ -9,10 +9,10 @@ var zmq = require('zmq');
  */
 class Listener extends events {
   /**
-   * @param type        The type of remote socket to connect to
-   * @param emitter     The global emitter
-   * @param service     The service to subscribe to
-   * @param knownNodes  All the nodes this node known about
+   * @param {string} type                       The type of remote socket to connect to
+   * @param {EventEmitter} emitter              The global emitter
+   * @param {Service} service                   The service to subscribe to
+   * @param {object.<string, Node>} knownNodes  All the nodes this node known about
    */
   constructor(type, emitter, service, knownNodes) {
     super();
@@ -20,7 +20,7 @@ class Listener extends events {
     this.knownServices = {};
     this.socket = zmq.socket(type);
     this.socket.on('message', msg => this.emit('message', msg));
-    for (let id of knownNodes) {
+    for (let id in knownNodes) {
       var nodeService = knownNodes[id].services[service.id];
       if (nodeService) {
         this.knownServices[nodeService.id] = nodeService.port;
@@ -32,6 +32,11 @@ class Listener extends events {
     emitter.on('nodeRemoved', this._onNodeRemoved);
   }
 
+  /**
+   * Connect to the service of a newly added node.
+   * @param {Node} node
+   * @private
+   */
   _onNodeAdded(node) {
     for (let serviceId in node.services) {
       if (this.service.id == serviceId && !this.knownServices[serviceId]) {
@@ -42,6 +47,11 @@ class Listener extends events {
     }
   }
 
+  /**
+   * Disconnect and remove a node from known services.
+   * @param {Node} node
+   * @private
+   */
   _onNodeRemoved(node) {
     for (let serviceId in node.services) {
       if (this.knownServices[serviceId]) {

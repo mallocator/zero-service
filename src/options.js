@@ -22,6 +22,9 @@ var shortId = require('shortid');
  * @property {object} [node.checkNetwork=false]     Flag that decides whether we know about all other nodes or need to ask
  *                                                  around in the cluster. This value is set dynamically and should not be
  *                                                  set by the user.
+ * @property {object} [ports]                   The port range in which auto generated addresses will be listened on
+ * @property {number} [ports.min=30000]         The minimum port for the port range
+ * @property {number} [ports.max=50000]         The maximum port for the port range
  */
 
 /**
@@ -59,6 +62,25 @@ exports.defaultOptions = {
     checkNetwork: false
   },
   debug: false
+};
+
+/**
+ * Sets default options and verifies that all values are in the right format.
+ * @param options
+ * @returns {Options}
+ */
+exports.normalize = function(options) {
+  if (_.isString(options)) {
+    options = require(path.join(module.main.filename, options));
+  }
+  options = options || {};
+  this.options = Object.assign({}, exports.defaultOptions, options);
+  for (let prop in this.options) {
+    if (this.options.hasOwnProperty(prop) && exports[prop]) {
+      exports[prop]();
+    }
+  }
+  return this.options;
 };
 
 /**
@@ -115,25 +137,6 @@ exports.defaultAws = {
 exports.defaultLocal = {
   file: '/tmp/zero.service',
   interval: 1000
-};
-
-/**
- * Sets default options and verifies that all values are in the right format.
- * @param options
- * @returns {*|{}}
- */
-exports.normalize = function(options) {
-  if (_.isString(options)) {
-    options = require(path.join(module.main.filename, options));
-  }
-  options = options || {};
-  this.options = Object.assign({}, exports.defaultOptions, options);
-  for (let prop in this.options) {
-    if (this.options.hasOwnProperty(prop) && exports[prop]) {
-      exports[prop]();
-    }
-  }
-  return this.options;
 };
 
 /**

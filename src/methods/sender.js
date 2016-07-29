@@ -9,13 +9,15 @@ var zmq = require('zmq');
 class Sender extends events {
   /**
    *
-   * @param type    The type of local socket to bind to
-   * @param address
-     */
-  constructor(type, address) {
+   * @param {string} type           The type of local socket to bind to
+   * @param {EventEmitter} emitter  The global event emitter
+   * @param {Service} service       The service to send to
+   */
+  constructor(type, emitter, service) {
     super();
     this.socket = zmq.socket(type);
-    this.socket.bind(address, err => {
+    this.socket.bind(service.host, err => {
+      this.connected = true;
       if (err) {
         return this.emit('error', new Error(err));
       }
@@ -24,6 +26,9 @@ class Sender extends events {
   }
 
   send(msg, flags, cb) {
+    if (!this.connected) {
+      return this.once('bound', () => this.send(msg, flags, cb));
+    }
     this.socket.send(msg, flags, cb);
   }
 }
